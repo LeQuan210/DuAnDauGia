@@ -44,14 +44,30 @@
 
         <div class="col-lg-5 d-flex flex-column">
             <div class="card shadow-sm border-0 flex-grow-1 d-flex flex-column rounded-4 overflow-hidden">
-                
+
                 <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center p-3">
                     <span class="fw-bold fs-5"><i class="bi bi-activity me-2 text-primary"></i>Diễn biến</span>
                     <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill shadow-sm d-flex align-items-center">
-                        <i class="bi bi-hourglass-split me-1"></i> 
+                        <i class="bi bi-hourglass-split me-1"></i>
                         <span id="auctionTimer" data-endtime="@DateTime.Now.AddMinutes(1).ToString("yyyy-MM-ddTHH:mm:ss")">Đang tính...</span>
                     </span>
                 </div>
+
+                <div class="bg-warning bg-opacity-10 border-bottom border-warning p-3 shadow-sm">
+                    <p class="fw-bold text-warning mb-2 text-uppercase" style="font-size: 0.85rem;"><i class="bi bi-star-fill me-1"></i> Quyền quản lý phiên</p>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-danger w-50 fw-bold" onclick="if(confirm('Anh có chắc chắn muốn hủy phiên đấu giá này không? Mọi lịch sử đặt giá sẽ bị xóa bỏ.')) { alert('Đã hủy phiên đấu giá thành công!'); window.location.href='/Home/Index'; }">
+                            <i class="bi bi-x-circle me-1"></i>Hủy đấu giá
+                        </button>
+                        <button class="btn btn-success w-50 fw-bold shadow-sm" onclick="if(confirm('Anh muốn chốt ngay mức giá cao nhất hiện tại cho người này?')) { alert('Chốt phiên thành công!'); document.getElementById('winnerOverlay').classList.remove('d-none'); document.getElementById('winnerOverlay').classList.add('d-flex'); }">
+                            <i class="bi bi-hammer me-1"></i>Chốt ngay
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body bg-light overflow-auto p-3" id="chatBox" style="height: 480px; max-height: 480px;">
+                    <div class="d-flex mb-3">
+                        <div class="bg-white border rounded-4 p-2 shadow-sm" style="max-width: 85%;">
+                            <small class="fw-bold text-secondary d-block ps-1">Người dùng A</small>
 
                 <div class="card-body bg-light overflow-auto p-3" id="chatBox" style="height: 480px; max-height: 480px;">
                     <div class="d-flex mb-3">
@@ -287,4 +303,4 @@
                 background: #888;
             }
     </style>
-}
+}       

@@ -26,6 +26,10 @@ namespace WebDauGiaUI.Controllers
             return View(users);
         }
 
+        public IActionResult CreateAuction()
+        {
+            return View();
+        }
 
         public IActionResult MyAccount()
         {

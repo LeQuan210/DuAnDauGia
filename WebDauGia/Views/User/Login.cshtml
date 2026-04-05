@@ -14,7 +14,7 @@
                 <form asp-controller="User" asp-action="Login" method="post">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Tên đăng nhập / Email</label>
-                        <input type="text" class="form-control" placeholder="Nhập tài khoản của bạn..." required>
+                        <input type="text" class="form-control" name="username" placeholder="Nhập tài khoản của bạn..." required>
                     </div>
 
                     <div class="mb-3">
@@ -22,7 +22,7 @@
                             <label class="form-label fw-bold mb-0">Mật khẩu</label>
                             <a asp-controller="User" asp-action="ForgotPassword" class="text-decoration-none small text-primary fw-bold">Quên mật khẩu?</a>
                         </div>
-                        <input type="password" class="form-control mt-2" placeholder="Nhập mật khẩu..." required>
+                        <input type="password" class="form-control mt-2" name="password" placeholder="Nhập mật khẩu..." required>
                     </div>
 
                     <div class="mb-4 form-check">
