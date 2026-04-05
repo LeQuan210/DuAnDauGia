@@ -1,0 +1,54 @@
+﻿@{
+    ViewData["Title"] = "Tài khoản của tôi";
+}
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <img src="https://ui-avatars.com/api/?name=@User.Identity.Name&background=0D6EFD&color=fff&size=128" class="rounded-circle mb-3" alt="Avatar">
+                    <h4 class="fw-bold">@User.Identity.Name</h4>
+                    <p class="text-muted mb-1">Thành viên từ: 01/2026</p>
+                    <span class="badge bg-success px-3 py-2 fs-6">Trạng thái: Đang hoạt động</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom fw-bold text-primary fs-5">
+                    Thống kê đấu giá
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-sm-4 border-end">
+                            <h2 class="fw-bold text-primary">14</h2>
+                            <p class="text-muted mb-0">Số lần Mua (Ra giá)</p>
+                        </div>
+                        <div class="col-sm-4 border-end">
+                            <h2 class="fw-bold text-success">5</h2>
+                            <p class="text-muted mb-0">Số lần Bán (Tạo phiên)</p>
+                        </div>
+                        <div class="col-sm-4">
+                            <h2 class="fw-bold text-danger">19</h2>
+                            <p class="text-muted mb-0">Tổng số lần giao dịch</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom fw-bold text-primary fs-5">
+                    Thông tin chi tiết
+                </div>
+                <div class="card-body">
+                    <p><strong>Email:</strong> user@example.com</p>
+                    <p><strong>Số điện thoại:</strong> Chưa cập nhật</p>
+                    <p><strong>Địa chỉ:</strong> Chưa cập nhật</p>
+                    <button class="btn btn-outline-primary mt-2">Cập nhật thông tin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

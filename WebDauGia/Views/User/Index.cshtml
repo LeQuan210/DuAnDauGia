@@ -1,0 +1,43 @@
+﻿@model IEnumerable<WebDauGiaDomain.Entities.User>
+
+@{
+    ViewData["Title"] = "Danh sách người dùng";
+}
+
+<div class="container mt-4">
+    <h2>Danh sách người dùng hệ thống</h2>
+    <hr />
+
+    <table class="table table-bordered table-striped mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Tên đăng nhập</th>
+                <th>Email</th>
+                <th>Vai trò</th>
+                <th>Số dư ví</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.UserID</td>
+                        <td>@user.Username</td>
+                        <td>@user.Email</td>
+                        <td>@user.Role</td>
+                        <td>@user.WalletBalance.ToString("C0")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted">Chưa có dữ liệu người dùng nào trong hệ thống.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

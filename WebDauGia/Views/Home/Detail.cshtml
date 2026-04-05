@@ -1,0 +1,290 @@
+﻿@{
+    ViewData["Title"] = "Phòng Đấu Giá";
+}
+
+<div class="container my-4">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 mb-3 rounded-4 overflow-hidden">
+                <div class="bg-light text-center d-flex align-items-center justify-content-center" style="height: 450px;">
+                    <img src="https://via.placeholder.com/800x600?text=Anh+San+Pham+Thuc+Te" class="img-fluid w-100 h-100" alt="Sản phẩm" style="object-fit: cover;">
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-3 rounded-4">
+                <div class="card-header bg-white border-bottom fw-bold fs-5 py-3">
+                    Tên sản phẩm nổi bật hiển thị ở đây
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-0" style="line-height: 1.8;">
+                        Đây là khu vực hiển thị thông tin mô tả chi tiết của sản phẩm. Tình trạng, kích thước, chất liệu, nguồn gốc xuất xứ và các lưu ý khác dành cho người tham gia đấu giá sẽ được liệt kê đầy đủ tại đây để đảm bảo tính minh bạch.
+                    </p>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="card shadow-sm border-0 bg-light h-100 rounded-4">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <p class="text-muted mb-1 fs-6">Giá khởi điểm</p>
+                            <h4 class="fw-bold text-dark mb-0">500.000 đ</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="card shadow-sm border-0 border-primary border-2 h-100 rounded-4 bg-primary bg-opacity-10">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <p class="text-primary fw-bold mb-1 fs-6">Giá hiện tại</p>
+                            <h3 class="fw-bold text-danger mb-0" id="currentPrice">2.542.000 đ</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 d-flex flex-column">
+            <div class="card shadow-sm border-0 flex-grow-1 d-flex flex-column rounded-4 overflow-hidden">
+                
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center p-3">
+                    <span class="fw-bold fs-5"><i class="bi bi-activity me-2 text-primary"></i>Diễn biến</span>
+                    <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill shadow-sm d-flex align-items-center">
+                        <i class="bi bi-hourglass-split me-1"></i> 
+                        <span id="auctionTimer" data-endtime="@DateTime.Now.AddMinutes(1).ToString("yyyy-MM-ddTHH:mm:ss")">Đang tính...</span>
+                    </span>
+                </div>
+
+                <div class="card-body bg-light overflow-auto p-3" id="chatBox" style="height: 480px; max-height: 480px;">
+                    <div class="d-flex mb-3">
+                        <div class="bg-white border rounded-4 p-2 shadow-sm" style="max-width: 85%;">
+                            <small class="fw-bold text-secondary d-block ps-1">Người dùng A</small>
+                            <span class="text-dark px-1">Đã đặt <strong class="text-danger">10.000 VNĐ</strong></span>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="bg-white border rounded-4 p-2 shadow-sm" style="max-width: 85%;">
+                            <small class="fw-bold text-secondary d-block ps-1">Người dùng B</small>
+                            <span class="text-dark px-1">Đã đặt <strong class="text-danger">23.000 VNĐ</strong></span>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="bg-white border rounded-4 p-2 shadow-sm" style="max-width: 85%;">
+                            <small class="fw-bold text-secondary d-block ps-1">Người dùng C</small>
+                            <span class="text-dark px-1">Đã đặt <strong class="text-danger">42.000 VNĐ</strong></span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3 justify-content-end">
+                        <div class="bg-primary bg-opacity-10 border border-primary rounded-4 p-2 shadow-sm text-end" style="max-width: 85%;">
+                            <small class="fw-bold text-primary d-block pe-1">Bạn</small>
+                            <span class="text-dark px-1">Đã đặt <strong class="text-danger">50.000 VNĐ</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white border-top p-3" id="bidFooter">
+                    <div class="input-group input-group-lg shadow-sm rounded-3 overflow-hidden">
+                        <input type="number" class="form-control fs-6 border-0 bg-light" id="bidInput" placeholder="Nhập số tiền..." min="5000" step="1000">
+                        <button class="btn btn-primary fw-bold px-4" type="button" id="btnPlaceBid">ĐẶT GIÁ</button>
+                    </div>
+                    <small class="text-muted mt-2 d-block text-center"><i class="bi bi-info-circle me-1"></i>Bước giá tối thiểu: 5.000 VNĐ</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="winnerOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-none justify-content-center align-items-center" style="z-index: 9999; backdrop-filter: blur(5px);">
+    <div class="bg-white p-5 rounded-4 shadow-lg text-center mx-3" style="max-width: 500px; animation: popIn 0.5s ease-out;">
+        <div class="text-warning mb-3" style="font-size: 4rem; line-height: 1;"><i class="bi bi-trophy-fill"></i></div>
+        <h2 class="fw-bold text-dark mb-4">Phiên đấu giá đã kết thúc!</h2>
+        <div class="bg-light rounded-3 p-3 mb-4 border">
+            <p class="fs-6 text-muted mb-1">Người thắng cuộc</p>
+            <p class="fs-4 fw-bold text-primary mb-3">@User.Identity.Name</p>
+            <hr class="w-50 mx-auto my-2">
+            <p class="fs-6 text-muted mb-1 mt-3">Mức giá chốt</p>
+            <p class="text-danger fw-bold fs-3 mb-0" id="finalPriceDisplay"></p>
+        </div>
+
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary w-100 fw-bold py-3 fs-5 rounded-pill">Đóng & Về trang chủ</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const timerEl = document.getElementById('auctionTimer');
+            let isEnded = false;
+
+            // Các thành phần giao diện
+            const btnBid = document.getElementById('btnPlaceBid');
+            const inputBid = document.getElementById('bidInput');
+            const chatBox = document.getElementById('chatBox');
+            const currentPriceEl = document.getElementById('currentPrice');
+
+            // --- CƠ CHẾ ĐẾM NGƯỢC MỚI ---
+            // Cài đặt thời gian đếm ngược: 60 giây (60000 ms) cho mỗi lần đặt giá
+            const COUNTDOWN_DURATION = 60000;
+
+            // Lấy thời gian kết thúc từ bộ nhớ (để F5 không bị mất) hoặc tạo mới
+            let endTime = localStorage.getItem('auction_endtime');
+            if (!endTime) {
+                endTime = new Date().getTime() + COUNTDOWN_DURATION;
+                localStorage.setItem('auction_endtime', endTime);
+            } else {
+                endTime = parseInt(endTime);
+            }
+
+            // Hàm reset đồng hồ
+            function resetTimer() {
+                endTime = new Date().getTime() + COUNTDOWN_DURATION;
+                localStorage.setItem('auction_endtime', endTime);
+
+                // Hiệu ứng nhấp nháy nhỏ để người dùng biết thời gian vừa được làm mới
+                timerEl.style.color = 'yellow';
+                setTimeout(() => timerEl.style.color = '', 500);
+            }
+
+            // --- 1. LẤY DỮ LIỆU TỪ BỘ NHỚ TẠM ---
+            let currentPriceValue = localStorage.getItem('auction_price') ? parseInt(localStorage.getItem('auction_price')) : 2542000;
+            let chatHistory = localStorage.getItem('auction_chat') || '';
+
+            currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
+            if (chatHistory !== '') {
+                chatBox.innerHTML = chatHistory;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } else {
+                chatBox.innerHTML = '';
+            }
+
+            function appendChatMessage(senderName, amount, isSelf) {
+                const newMsg = document.createElement('div');
+                newMsg.className = isSelf ? "d-flex mb-3 justify-content-end" : "d-flex mb-3";
+
+                const alignStyle = isSelf ? "text-end" : "text-start";
+                const bgClass = isSelf ? "bg-primary bg-opacity-10 border border-primary" : "bg-white border";
+                const nameColor = isSelf ? "text-primary pe-1" : "text-secondary ps-1";
+                const actionText = isSelf ? "Bạn đã đặt thêm" : "Đã đặt thêm";
+
+                newMsg.innerHTML = `
+                    <div class="${bgClass} rounded-4 p-2 shadow-sm ${alignStyle}" style="max-width: 85%; animation: popIn 0.3s ease-out;">
+                        <small class="fw-bold ${nameColor} d-block">${senderName}</small>
+                        <span class="text-dark px-1">${actionText} <strong class="text-danger">${amount.toLocaleString('vi-VN')} VNĐ</strong></span>
+                    </div>
+                `;
+                chatBox.appendChild(newMsg);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                localStorage.setItem('auction_chat', chatBox.innerHTML);
+            }
+
+            // --- 2. VÒNG LẶP ĐỒNG HỒ ---
+            const timerInterval = setInterval(function() {
+                if (isEnded) return;
+
+                const now = new Date().getTime();
+                const distance = endTime - now;
+
+                if (distance <= 0) {
+                    clearInterval(timerInterval);
+                    timerEl.innerHTML = "Đã kết thúc";
+                    isEnded = true;
+
+                    inputBid.disabled = true;
+                    btnBid.disabled = true;
+
+                    document.getElementById('finalPriceDisplay').innerText = currentPriceEl.innerText;
+
+                    const overlay = document.getElementById('winnerOverlay');
+                    overlay.classList.remove('d-none');
+                    overlay.classList.add('d-flex');
+
+                    // Xóa bộ nhớ tạm để lần sau vào lại là phiên mới
+                    localStorage.removeItem('auction_price');
+                    localStorage.removeItem('auction_chat');
+                    localStorage.removeItem('auction_endtime');
+                    return;
+                }
+
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                timerEl.innerText = String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
+            }, 1000);
+
+            // --- 3. LOGIC BẠN NHẤN ĐẶT GIÁ ---
+            btnBid.addEventListener('click', function() {
+                if(isEnded) return;
+
+                const bidAmount = parseInt(inputBid.value);
+                if(isNaN(bidAmount) || bidAmount < 5000) {
+                    alert("Anh nhập số tiền hợp lệ (từ 5.000 VNĐ) nhé!");
+                    return;
+                }
+
+                currentPriceValue += bidAmount;
+                currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
+                localStorage.setItem('auction_price', currentPriceValue);
+
+                appendChatMessage('Bạn', bidAmount, true);
+                inputBid.value = '';
+
+                // GỌI HÀM RESET THỜI GIAN
+                resetTimer();
+            });
+
+            // --- 4. HỆ THỐNG BOT ẢO THÔNG MINH ---
+            const botNames = ['Khách_89', 'GamerPro', 'SưuTầmCổ_VN', 'Người dùng Ẩn Danh', 'HoangAnh_99'];
+
+            function triggerBotBid() {
+                if(isEnded) return;
+
+                const randomBot = botNames[Math.floor(Math.random() * botNames.length)];
+                const randomBid = Math.floor(Math.random() * 5 + 1) * 5000;
+
+                currentPriceValue += randomBid;
+                currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
+                localStorage.setItem('auction_price', currentPriceValue);
+
+                appendChatMessage(randomBot, randomBid, false);
+
+                // BOT ĐẶT GIÁ CŨNG RESET THỜI GIAN
+                resetTimer();
+
+                // Lên lịch cho con bot tiếp theo (Thời gian ngẫu nhiên từ 8s đến 15s)
+                const nextBotTime = Math.floor(Math.random() * 7000) + 8000;
+                setTimeout(triggerBotBid, nextBotTime);
+            }
+
+            // Khởi động bot sau 5 giây đầu tiên
+            setTimeout(triggerBotBid, 5000);
+        });
+    </script>
+    <style>
+        @@keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        #chatBox::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chatBox::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #chatBox::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+
+            #chatBox::-webkit-scrollbar-thumb:hover {
+                background: #888;
+            }
+    </style>
+}

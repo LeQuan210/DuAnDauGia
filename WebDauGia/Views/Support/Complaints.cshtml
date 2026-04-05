@@ -1,0 +1,60 @@
+﻿@{
+    ViewData["Title"] = "Giải quyết khiếu nại";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <h3 class="fw-bold text-primary text-center mb-4">Gửi Yêu Cầu Khiếu Nại</h3>
+                    <p class="text-muted text-center mb-4">Chúng tôi luôn lắng nghe và cam kết giải quyết các vấn đề của bạn trong vòng 24 - 48 giờ làm việc.</p>
+
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Họ và tên</label>
+                                <input type="text" class="form-control" value="@User.Identity.Name" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Số điện thoại liên hệ <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" placeholder="Nhập số điện thoại..." required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Loại khiếu nại <span class="text-danger">*</span></label>
+                                <select class="form-select" required>
+                                    <option value="">-- Chọn vấn đề --</option>
+                                    <option value="1">Hàng hóa không đúng mô tả</option>
+                                    <option value="2">Người chiến thắng không thanh toán</option>
+                                    <option value="3">Nghi ngờ gian lận/Đẩy giá ảo</option>
+                                    <option value="4">Lỗi giao dịch nạp/rút tiền</option>
+                                    <option value="5">Vấn đề khác</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Mã phiên đấu giá (Nếu có)</label>
+                                <input type="text" class="form-control" placeholder="VD: AUC-20260404">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nội dung chi tiết <span class="text-danger">*</span></label>
+                            <textarea class="form-control" rows="5" placeholder="Vui lòng mô tả chi tiết sự việc để chúng tôi có thể hỗ trợ tốt nhất..." required></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Đính kèm bằng chứng (Hình ảnh/Video)</label>
+                            <input class="form-control" type="file" id="formFileMultiple" multiple>
+                            <small class="text-muted">Hỗ trợ định dạng JPG, PNG, MP4. Tối đa 5MB/file.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 fs-5">Gửi Khiếu Nại</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

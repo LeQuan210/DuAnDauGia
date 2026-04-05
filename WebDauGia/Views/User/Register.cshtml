@@ -1,0 +1,42 @@
+﻿@model WebDauGiaDomain.Entities.User
+
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <h3 class="text-center">Đăng ký thành viên</h3>
+            <hr />
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+
+            <form asp-action="Register" method="post">
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label">Tên đăng nhập</label>
+                    <input asp-for="Username" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PasswordHash" class="form-label">Mật khẩu</label>
+                    <input asp-for="PasswordHash" type="password" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" required />
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Đăng ký ngay</button>
+
+                <div class="text-center mt-3">
+                    <span>Đã có tài khoản? <a asp-action="Login">Đăng nhập tại đây</a></span>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

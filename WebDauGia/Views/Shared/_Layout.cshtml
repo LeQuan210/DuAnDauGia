@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - WebDauGia</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/WebDauGia.styles.css" asp-append-version="true" />
+</head>
+<body class="bg-light">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm mb-3">
+            <div class="container-fluid">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-light border me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <a class="navbar-brand fw-bold text-primary" asp-controller="Home" asp-action="Index">AUCTION<span class="text-dark">HUB</span></a>
+                </div>
+
+                <div class="flex-grow-1 mx-lg-5 d-none d-md-block">
+                    <form class="input-group">
+                        <input type="text" class="form-control" placeholder="Tìm tên sản phẩm, thương hiệu...">
+                        <button class="btn btn-primary px-4" type="submit">Tìm kiếm</button>
+                    </form>
+                </div>
+
+                <div class="d-flex align-items-center ms-auto">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+<div class="dropdown me-3 d-flex align-items-center">
+    <a href="#" class="nav-link text-dark position-relative p-0" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-bell-fill fs-5 text-secondary hover-primary"></i>
+        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+    </a>
+    
+    <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" aria-labelledby="notificationDropdown" style="width: 380px;">
+        
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white rounded-top">
+            <span class="fw-bold text-dark">Các thông báo</span>
+            <div>
+                <i class="bi bi-check-all text-primary me-2" style="cursor: pointer; font-size: 1.2rem;" title="Đánh dấu đã đọc"></i>
+                <i class="bi bi-gear-fill text-primary" style="cursor: pointer; font-size: 1.1rem;" title="Cài đặt"></i>
+            </div>
+        </div>
+
+        <div class="overflow-auto" style="max-height: 400px; background-color: #f8f9fa;">
+            
+            <div class="text-center py-5" id="emptyNotification">
+                <i class="bi bi-bell-slash text-muted display-4 d-block mb-3"></i>
+                <span class="text-muted fs-6">Không có thông báo</span>
+            </div>
+
+            </div>
+
+        <div class="p-2 border-top text-center bg-white rounded-bottom">
+            <a href="#" class="text-decoration-none fw-bold small">Xem tất cả</a>
+        </div>
+    </div>
+</div>                            <div class="dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center p-0" href="#" id="userMenu" data-bs-toggle="dropdown">
+                                <a asp-controller="Home" asp-action="Detail" class="d-block">
+                                    <img src="https://ui-avatars.com/api/?name=@User.Identity.Name&background=0D6EFD&color=fff" class="rounded-circle me-2" width="35">
+                                    </a>
+                                <div class="d-none d-lg-block">
+                                    <small class="text-muted d-block" style="font-size: 10px;">Xin chào,</small>
+                                    <span class="fw-bold text-dark">@User.Identity.Name</span>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                                <li><a class="dropdown-item py-2" asp-controller="User" asp-action="Profile">👤 Hồ sơ cá nhân</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="User" asp-action="MyAuctions" >⚖️ Đấu giá của tôi</a></li>
+                                <li><a class="dropdown-item py-2" href="#">💰 Số dư: @User.FindFirst("WalletBalance")?.Value đ</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2 text-danger" asp-controller="User" asp-action="Logout">🚪 Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="btn btn-link text-decoration-none text-dark fw-bold me-2" asp-controller="User" asp-action="Login">Đăng nhập</a>
+                        <a class="btn btn-primary fw-bold px-4 rounded-pill" asp-controller="User" asp-action="Register">Đăng ký</a>
+                    }
+                </div>
+            </div>
+        </nav>
+
+        <div class="offcanvas offcanvas-start shadow" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+            <div class="offcanvas-header border-bottom bg-primary text-white">
+                <h5 class="offcanvas-title fw-bold" id="sidebarMenuLabel">
+                    <i class="bi bi-grid-3x3-gap-fill me-2"></i>Danh Mục
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item bg-light fw-bold text-muted text-uppercase" style="font-size: 0.85em;">
+                        Sản phẩm nổi bật
+                    </div>
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                        <i class="bi bi-laptop fs-5 text-primary me-3"></i> Đồ điện tử & Công nghệ
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                        <i class="bi bi-controller fs-5 text-success me-3"></i> Mô hình & Thẻ bài Game
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                        <i class="bi bi-car-front fs-5 text-danger me-3"></i> Phương tiện đi lại
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                        <i class="bi bi-watch fs-5 text-warning me-3"></i> Trang sức & Đồng hồ
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                        <i class="bi bi-trophy fs-5 text-info me-3"></i> Kỷ vật thể thao
+                    </a>
+
+                    <div class="list-group-item bg-light fw-bold text-muted text-uppercase mt-2" style="font-size: 0.85em;">
+                        Tiện ích
+                    </div>
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                        <i class="bi bi-fire fs-5 text-danger me-3"></i> Phiên đấu giá đang Hot
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                        <i class="bi bi-heart fs-5 text-danger me-3"></i> Danh sách yêu thích
+                    </a>
+                    <a asp-controller="Support" asp-action="Complaints" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                        <i class="bi bi-headset fs-5 text-primary me-3"></i> Trung tâm hỗ trợ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="bg-dark text-white pt-5 pb-4 mt-5">
+        <div class="container text-center text-md-start">
+            <div class="row text-center text-md-start">
+
+                <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mt-3">
+                    <h5 class="text-uppercase mb-4 fw-bold text-warning">WebDauGia</h5>
+                    <p>Nền tảng đấu giá trực tuyến uy tín, mang đến cho bạn những món đồ độc đáo với giá trị đích thực. Minh bạch, an toàn và nhanh chóng.</p>
+                </div>
+
+                <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mt-3">
+                    <h5 class="text-uppercase mb-4 fw-bold text-warning">Khám phá</h5>
+                    <p><a asp-controller="Home" asp-action="Explore" asp-route-category="tech" class="text-white text-decoration-none">Đồ công nghệ</a></p>
+                    <p><a asp-controller="Home" asp-action="Explore" asp-route-category="antique" class="text-white text-decoration-none">Đồ cổ & Sưu tầm</a></p>
+                    <p><a asp-controller="Home" asp-action="Explore" asp-route-category="ending" class="text-white text-decoration-none">Phiên sắp kết thúc</a></p>
+                    <p><a asp-controller="Home" asp-action="Explore" asp-route-category="zero" class="text-white text-decoration-none">Đấu giá từ 0đ</a></p>
+                </div>
+
+                <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mt-3">
+                    <h5 class="text-uppercase mb-4 fw-bold text-warning">Hỗ trợ</h5>
+                    <p><a asp-controller="User" asp-action="MyAccount" class="text-white text-decoration-none">Tài khoản của tôi</a></p>
+                    <p><a asp-controller="Support" asp-action="Regulations" class="text-white text-decoration-none">Quy chế hoạt động</a></p>
+                    <p><a asp-controller="Support" asp-action="Privacy" class="text-white text-decoration-none">Chính sách bảo mật</a></p>
+                    <p><a asp-controller="Support" asp-action="Complaints" class="text-white text-decoration-none">Giải quyết khiếu nại</a></p>
+                </div>
+
+                <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mt-3">
+                    <h5 class="text-uppercase mb-4 fw-bold text-warning">Liên hệ</h5>
+                    <p>📍 123 Đường Cầu Giấy, Hà Nội</p>
+                    <p>📧 support@webdaugia.vn</p>
+                    <p>📞 +84 123 456 789</p>
+                    <p>🕒 Giờ làm việc: 8h00 - 22h00</p>
+                </div>
+            </div>
+
+            <hr class="mb-4">
+
+            <div class="row align-items-center">
+                <div class="col-md-7 col-lg-8">
+                    <p> Copyright ©2026 All rights reserved by: <a href="#" class="text-decoration-none"><strong class="text-warning">WebDauGia Team</strong></a></p>
+                </div>
+                <div class="col-md-5 col-lg-4">
+                    <div class="text-center text-md-end">
+                        <a href="https://www.facebook.com/" target="_blank" class="text-white me-4 text-decoration-none fs-6">
+                            <i class="bi bi-facebook fs-5 me-1"></i> Facebook
+                        </a>
+                        <a href="https://www.instagram.com/" target="_blank" class="text-white me-4 text-decoration-none fs-6">
+                            <i class="bi bi-instagram fs-5 me-1"></i> Instagram
+                        </a>
+                        <a href="https://www.youtube.com/" target="_blank" class="text-white text-decoration-none fs-6">
+                            <i class="bi bi-youtube fs-5 me-1"></i> YouTube
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

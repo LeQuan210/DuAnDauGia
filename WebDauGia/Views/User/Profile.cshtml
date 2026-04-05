@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h4 class="fw-bold mb-0 text-primary">Cập nhật Hồ sơ cá nhân</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tên đăng nhập</label>
+                                <input type="text" class="form-control bg-light" value="@User.Identity.Name" readonly disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Họ và tên thực <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" placeholder="Nhập họ tên đầy đủ...">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" value="user@example.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" placeholder="Nhập số điện thoại liên hệ...">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Địa chỉ nhận hàng mặc định</label>
+                            <textarea class="form-control" rows="3" placeholder="Nhập địa chỉ chi tiết (Số nhà, Phố, Phường, Quận, Tỉnh/TP)..."></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                            <button type="submit" class="btn btn-primary px-5 fw-bold">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
