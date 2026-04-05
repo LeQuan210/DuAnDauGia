@@ -1,18 +1,16 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace WebDauGiaDomain.Entities
 {
     public class Product
     {
-        [Key]
-        public int ProductID { get; set; }
-        public int SellerID { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
-        
-        // Navigation property
-        public User? Seller { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public decimal StartPrice { get; set; }
+        public string ImageUrl { get; set; }
+        public int CategoryId { get; set; } // Để phân loại: 1-Điện tử, 2-Mô hình...
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

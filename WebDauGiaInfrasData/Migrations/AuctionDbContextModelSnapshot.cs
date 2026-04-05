@@ -61,17 +61,23 @@ namespace WebDauGiaInfrasData.Migrations
 
             modelBuilder.Entity("WebDauGiaDomain.Entities.Product", b =>
                 {
-                    b.Property<int>("ProductID")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Category")
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -79,12 +85,10 @@ namespace WebDauGiaInfrasData.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SellerID")
-                        .HasColumnType("int");
+                    b.Property<decimal>("StartPrice")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("ProductID");
-
-                    b.HasIndex("SellerID");
+                    b.HasKey("Id");
 
                     b.ToTable("Products", (string)null);
                 });
@@ -133,17 +137,6 @@ namespace WebDauGiaInfrasData.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("WebDauGiaDomain.Entities.Product", b =>
-                {
-                    b.HasOne("WebDauGiaDomain.Entities.User", "Seller")
-                        .WithMany()
-                        .HasForeignKey("SellerID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Seller");
                 });
 #pragma warning restore 612, 618
         }

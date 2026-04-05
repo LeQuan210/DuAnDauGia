@@ -8,27 +8,22 @@
         <h3 class="fw-bold text-primary mb-0">Tạo Phiên Đấu Giá Mới</h3>
     </div>
 
-    <form asp-controller="Home" asp-action="Index" method="post" enctype="multipart/form-data">
+    <form asp-controller="User" asp-action="CreateAuction" method="post" enctype="multipart/form-data">
         <div class="row g-5">
             <div class="col-md-5">
-                <div class="card border-0 shadow-sm rounded-4 p-3 text-center h-100 d-flex flex-column justify-content-center align-items-center bg-light" style="min-height: 400px; border: 2px dashed #adb5bd !important;">
-                    <i class="bi bi-image text-secondary" style="font-size: 4rem;"></i>
-                    <p class="text-muted mt-2 fw-bold">Kéo thả hoặc nhấn để tải ảnh lên</p>
-                    <p class="small text-muted mb-3">Hỗ trợ JPG, PNG (Tối đa 5MB)</p>
-                    <input type="file" class="form-control w-75" accept="image/*" required>
-                </div>
+                <input type="file" name="ImageFile" class="form-control w-75" accept="image/*" required>
             </div>
 
             <div class="col-md-7">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Tên sản phẩm</label>
-                    <input type="text" class="form-control form-control-lg" placeholder="Ví dụ: Mô hình NIKKE Red Hood 1/7..." required>
+                    <input type="text" name="ProductName" class="form-control form-control-lg" placeholder="Ví dụ: Mô hình NIKKE Red Hood 1/7..." required>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Phân loại danh mục</label>
-                        <select class="form-select form-select-lg">
+                        <select name="CategoryId" class="form-select form-select-lg">
                             <option value="1">Đồ điện tử & Công nghệ</option>
                             <option value="2">Mô hình & Thẻ bài Game</option>
                             <option value="3">Phương tiện đi lại</option>
@@ -38,13 +33,13 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Giá khởi điểm (VNĐ)</label>
-                        <input type="number" class="form-control form-control-lg text-danger fw-bold" placeholder="50000" min="0" required>
+                        <input type="number" name="StartPrice" class="form-control form-control-lg text-danger fw-bold" placeholder="50000" min="0" required>
                     </div>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label fw-bold">Thông tin chi tiết</label>
-                    <textarea class="form-control" rows="5" placeholder="Mô tả tình trạng, xuất xứ, năm sản xuất, các tính năng đặc biệt của sản phẩm..." required></textarea>
+                    <textarea name="Description" class="form-control" rows="5" placeholder="Mô tả tình trạng, xuất xứ, năm sản xuất, các tính năng đặc biệt của sản phẩm..." required></textarea>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm py-3">

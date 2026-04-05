@@ -1,21 +1,31 @@
-﻿using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using WebDauGia.Models;
+using WebDauGiaAppli.Interfaces;
+using WebDauGiaDomain.Entities;
+using WebDauGiaInfrasData;
 
-namespace WebDauGia.Controllers
+
+namespace WebDauGiaUI.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly AuctionDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+
+        public HomeController(ILogger<HomeController> logger, AuctionDbContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
         {
-            return View();
+            // Lấy toàn bộ sản phẩm từ Database ra
+            var products = _context.Products.OrderByDescending(p => p.CreatedAt).ToList();
+            return View(products); // Gửi danh sách này sang giao diện
         }
 
         public IActionResult Privacy()
@@ -24,8 +34,9 @@ namespace WebDauGia.Controllers
         }
 
         // Hàm mở trang Phòng Đấu Giá (Chi tiết sản phẩm)
-        public IActionResult Detail()
+        public IActionResult Detail(bool isSeller = false)
         {
+            ViewBag.IsSeller = isSeller; // Truyền thông tin người bán cho View
             return View();
         }
 

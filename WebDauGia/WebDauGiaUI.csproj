@@ -20,4 +20,8 @@
     <ProjectReference Include="..\WebDauGiaInfras\WebDauGiaInfras.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
 </Project>

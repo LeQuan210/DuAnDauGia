@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IEnumerable<WebDauGiaDomain.Entities.Product>
+@{
     ViewData["Title"] = "Trang chủ";
 }
 
@@ -11,7 +12,7 @@
         </div>
         <div class="carousel-inner rounded-4 shadow-sm">
             <div class="carousel-item active">
-                <a asp-controller="Home" asp-action="Detail" class="d-block"><img src="https://via.placeholder.com/1200x400/0d6efd/ffffff?text=Sieu+Pham+Dau+Gia+Cuoi+Tuan" class="d-block w-100" alt="Banner 1" style="object-fit: cover; height: 400px>;"></a>
+                <a asp-controller="Home" asp-action="Detail" class="d-block"><img src="https://via.placeholder.com/1200x400/0d6efd/ffffff?text=Sieu+Pham+Dau+Gia+Cuoi+Tuan" class="d-block w-100" alt="Banner 1" style="object-fit: cover; height: 400px;"></a>
                 <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded-3 p-3">
                     <h3 class="fw-bold">🔥 Tuần lễ Siêu phẩm</h3>
                     <p class="fs-5">Cơ hội sở hữu những món đồ độc lạ với giá khởi điểm từ 0 đồng.</p>
@@ -47,73 +48,20 @@
         <a href="#" class="text-decoration-none text-primary fw-bold">Xem tất cả ❯</a>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-        
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0 rounded-3">
-                <div class="position-relative">
-                    <a asp-controller="Home" asp-action="Detail" class="d-block"><img src="https://via.placeholder.com/300x200?text=Uma+Musume+Figure" class="card-img-top rounded-top" alt="Sản phẩm" style="object-fit: cover; height: 220px;"></a>
-                    <span class="badge bg-danger position-absolute top-0 end-0 m-2">Sắp kết thúc</span>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <h6 class="card-title fw-bold text-truncate" title="Mô hình nhân vật Đặc biệt Uma Musume Pretty Derby">Mô hình Đặc biệt Uma Musume Pretty Derby</h6>
-                    <p class="text-danger fw-bold mb-1 fs-5">2.500.000 đ</p>
-                    <p class="text-muted small mb-3">
-                        ⏳ Còn lại: <span class="fw-bold text-dark countdown-timer" data-endtime="@DateTime.Now.AddHours(2).AddMinutes(15).ToString("yyyy-MM-ddTHH:mm:ss")">Đang tải...</span>
-                    </p>
-<a asp-controller="Home" asp-action="Detail" class="btn btn-outline-primary w-100 mt-auto fw-bold">Ra giá ngay</a>                </div>
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0 rounded-3">
-                <div class="position-relative">
-                    <a asp-controller="Home" asp-action="Detail" class="d-block"><img src="https://via.placeholder.com/300x200?text=NIKKE+Merch" class="card-img-top rounded-top" alt="Sản phẩm" style="object-fit: cover; height: 220px;"></a>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <h6 class="card-title fw-bold text-truncate" title="Bộ sưu tập Thẻ bài Goddess of Victory: NIKKE">Bộ sưu tập Thẻ bài Goddess of Victory: NIKKE</h6>
-                    <p class="text-danger fw-bold mb-1 fs-5">850.000 đ</p>
-                    <p class="text-muted small mb-3">
-                        ⏳ Còn lại: <span class="fw-bold text-dark countdown-timer" data-endtime="@DateTime.Now.AddHours(4).AddMinutes(30).ToString("yyyy-MM-ddTHH:mm:ss")">Đang tải...</span>
-                    </p>
-                    <a asp-controller="Home" asp-action="Detail" class="btn btn-outline-primary w-100 mt-auto fw-bold">Ra giá ngay</a>
+    <div class="row row-cols-1 row-cols-md-4 g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+                    <img src="@item.ImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-truncate">@item.Name</h6>
+                        <p class="text-danger fw-bold mb-2">@item.StartPrice.ToString("N0") đ</p>
+                        <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-outline-primary w-100 rounded-pill">Tham gia đấu giá</a>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0 rounded-3">
-                <div class="position-relative">
-                    <a asp-controller="Home" asp-action="Detail" class="d-block"><img src="https://via.placeholder.com/300x200?text=U23+Thuong+Chau" class="card-img-top rounded-top" alt="Sản phẩm" style="object-fit: cover; height: 220px;"></a>
-                    <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">Hiếm</span>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <h6 class="card-title fw-bold text-truncate" title="Bóng có chữ ký đội tuyển U23 Việt Nam (Thường Châu 2018)">Bóng chữ ký U23 Việt Nam (Thường Châu 2018)</h6>
-                    <p class="text-danger fw-bold mb-1 fs-5">15.000.000 đ</p>
-                    <p class="text-muted small mb-3">
-                        ⏳ Còn lại: <span class="fw-bold text-dark countdown-timer" data-endtime="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ss")">Đang tải...</span>
-                    </p>
-                    <a asp-controller="Home" asp-action="Detail" class="btn btn-outline-primary w-100 mt-auto fw-bold">Ra giá ngay</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0 rounded-3">
-                <div class="position-relative">
-                    <a asp-controller="Home" asp-action="Detail" class="d-block"><img src="https://via.placeholder.com/300x200?text=SweetDream+Voucher" class="card-img-top rounded-top" alt="Sản phẩm" style="object-fit: cover; height: 220px;"></a>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <h6 class="card-title fw-bold text-truncate" title="Voucher đặt bánh kem sự kiện tại SweetDream Bakery">Voucher đặt bánh kem tại SweetDream Bakery</h6>
-                    <p class="text-danger fw-bold mb-1 fs-5">500.000 đ</p>
-                    <p class="text-muted small mb-3">
-                        ⏳ Còn lại: <span class="fw-bold text-dark countdown-timer" data-endtime="@DateTime.Now.AddMinutes(5).AddSeconds(10).ToString("yyyy-MM-ddTHH:mm:ss")">Đang tải...</span>
-                    </p>
-                    <a asp-controller="Home" asp-action="Detail" class="btn btn-outline-primary w-100 mt-auto fw-bold">Ra giá ngay</a>
-                </div>
-            </div>
-        </div>
-
+        }
     </div>
 </div>
 

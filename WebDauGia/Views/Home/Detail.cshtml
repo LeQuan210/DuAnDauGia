@@ -53,6 +53,8 @@
                     </span>
                 </div>
 
+                @if (ViewBag.IsSeller != null && ViewBag.IsSeller == true)
+                {
                 <div class="bg-warning bg-opacity-10 border-bottom border-warning p-3 shadow-sm">
                     <p class="fw-bold text-warning mb-2 text-uppercase" style="font-size: 0.85rem;"><i class="bi bi-star-fill me-1"></i> Quyền quản lý phiên</p>
                     <div class="d-flex gap-2">
@@ -64,6 +66,7 @@
                         </button>
                     </div>
                 </div>
+                }
                 <div class="card-body bg-light overflow-auto p-3" id="chatBox" style="height: 480px; max-height: 480px;">
                     <div class="d-flex mb-3">
                         <div class="bg-white border rounded-4 p-2 shadow-sm" style="max-width: 85%;">
@@ -126,154 +129,146 @@
 </div>
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const timerEl = document.getElementById('auctionTimer');
-            let isEnded = false;
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const timerEl = document.getElementById('auctionTimer');
+                        let isEnded = false;
 
-            // Các thành phần giao diện
-            const btnBid = document.getElementById('btnPlaceBid');
-            const inputBid = document.getElementById('bidInput');
-            const chatBox = document.getElementById('chatBox');
-            const currentPriceEl = document.getElementById('currentPrice');
+                        const btnBid = document.getElementById('btnPlaceBid');
+                        const inputBid = document.getElementById('bidInput');
+                        const chatBox = document.getElementById('chatBox');
+                        const currentPriceEl = document.getElementById('currentPrice');
 
-            // --- CƠ CHẾ ĐẾM NGƯỢC MỚI ---
-            // Cài đặt thời gian đếm ngược: 60 giây (60000 ms) cho mỗi lần đặt giá
-            const COUNTDOWN_DURATION = 60000;
+                        // --- BƯỚC 1: DỌN DẸP TÀN DƯ CỦA PHIÊN CŨ ---
+                        let oldEndTime = localStorage.getItem('auction_endtime');
+                        const nowTime = new Date().getTime();
+                        // Nếu bộ nhớ có chứa thời gian cũ và thời gian đó đã trôi qua, xóa sạch đi!
+                        if (oldEndTime && parseInt(oldEndTime) < nowTime) {
+                            localStorage.removeItem('auction_endtime');
+                            localStorage.removeItem('auction_price');
+                            localStorage.removeItem('auction_chat');
+                        }
 
-            // Lấy thời gian kết thúc từ bộ nhớ (để F5 không bị mất) hoặc tạo mới
-            let endTime = localStorage.getItem('auction_endtime');
-            if (!endTime) {
-                endTime = new Date().getTime() + COUNTDOWN_DURATION;
-                localStorage.setItem('auction_endtime', endTime);
-            } else {
-                endTime = parseInt(endTime);
-            }
+                        // --- CƠ CHẾ ĐẾM NGƯỢC ---
+                        const COUNTDOWN_DURATION = 60000 * 5; // Cài đặt 5 phút (300.000 ms)
 
-            // Hàm reset đồng hồ
-            function resetTimer() {
-                endTime = new Date().getTime() + COUNTDOWN_DURATION;
-                localStorage.setItem('auction_endtime', endTime);
+                        let endTime = localStorage.getItem('auction_endtime');
+                        if (!endTime) {
+                            endTime = nowTime + COUNTDOWN_DURATION;
+                            localStorage.setItem('auction_endtime', endTime);
+                        } else {
+                            endTime = parseInt(endTime);
+                        }
 
-                // Hiệu ứng nhấp nháy nhỏ để người dùng biết thời gian vừa được làm mới
-                timerEl.style.color = 'yellow';
-                setTimeout(() => timerEl.style.color = '', 500);
-            }
+                        function resetTimer() {
+                            endTime = new Date().getTime() + COUNTDOWN_DURATION;
+                            localStorage.setItem('auction_endtime', endTime);
+                            timerEl.style.color = 'yellow';
+                            setTimeout(() => timerEl.style.color = '', 500);
+                        }
 
-            // --- 1. LẤY DỮ LIỆU TỪ BỘ NHỚ TẠM ---
-            let currentPriceValue = localStorage.getItem('auction_price') ? parseInt(localStorage.getItem('auction_price')) : 2542000;
-            let chatHistory = localStorage.getItem('auction_chat') || '';
+                        // --- KHÔI PHỤC DỮ LIỆU GIÁ & CHAT ---
+                        // (Lấy giá trị khởi điểm từ View, nếu không có thì mặc định 1000000)
+                        let currentPriceValue = localStorage.getItem('auction_price') ? parseInt(localStorage.getItem('auction_price')) : 1000000;
+                        let chatHistory = localStorage.getItem('auction_chat') || '';
 
-            currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
-            if (chatHistory !== '') {
-                chatBox.innerHTML = chatHistory;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            } else {
-                chatBox.innerHTML = '';
-            }
+                        currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
+                        if (chatHistory !== '') {
+                            chatBox.innerHTML = chatHistory;
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        }
 
-            function appendChatMessage(senderName, amount, isSelf) {
-                const newMsg = document.createElement('div');
-                newMsg.className = isSelf ? "d-flex mb-3 justify-content-end" : "d-flex mb-3";
+                        function appendChatMessage(senderName, amount, isSelf) {
+                            const newMsg = document.createElement('div');
+                            newMsg.className = isSelf ? "d-flex mb-3 justify-content-end" : "d-flex mb-3";
 
-                const alignStyle = isSelf ? "text-end" : "text-start";
-                const bgClass = isSelf ? "bg-primary bg-opacity-10 border border-primary" : "bg-white border";
-                const nameColor = isSelf ? "text-primary pe-1" : "text-secondary ps-1";
-                const actionText = isSelf ? "Bạn đã đặt thêm" : "Đã đặt thêm";
+                            const alignStyle = isSelf ? "text-end" : "text-start";
+                            const bgClass = isSelf ? "bg-primary bg-opacity-10 border border-primary" : "bg-white border";
+                            const nameColor = isSelf ? "text-primary pe-1" : "text-secondary ps-1";
+                            const actionText = isSelf ? "Bạn đã đặt thêm" : "Đã đặt thêm";
 
-                newMsg.innerHTML = `
-                    <div class="${bgClass} rounded-4 p-2 shadow-sm ${alignStyle}" style="max-width: 85%; animation: popIn 0.3s ease-out;">
-                        <small class="fw-bold ${nameColor} d-block">${senderName}</small>
-                        <span class="text-dark px-1">${actionText} <strong class="text-danger">${amount.toLocaleString('vi-VN')} VNĐ</strong></span>
-                    </div>
-                `;
-                chatBox.appendChild(newMsg);
-                chatBox.scrollTop = chatBox.scrollHeight;
-                localStorage.setItem('auction_chat', chatBox.innerHTML);
-            }
+                            newMsg.innerHTML = `
+                                <div class="${bgClass} rounded-4 p-2 shadow-sm ${alignStyle}" style="max-width: 85%; animation: popIn 0.3s ease-out;">
+                                    <small class="fw-bold ${nameColor} d-block">${senderName}</small>
+                                    <span class="text-dark px-1">${actionText} <strong class="text-danger">${amount.toLocaleString('vi-VN')} VNĐ</strong></span>
+                                </div>
+                            `;
+                            chatBox.appendChild(newMsg);
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                            localStorage.setItem('auction_chat', chatBox.innerHTML);
+                        }
 
-            // --- 2. VÒNG LẶP ĐỒNG HỒ ---
-            const timerInterval = setInterval(function() {
-                if (isEnded) return;
+                        // --- VÒNG LẶP ĐỒNG HỒ ĐẾM NGƯỢC ---
+                        const timerInterval = setInterval(function() {
+                            if (isEnded) return;
 
-                const now = new Date().getTime();
-                const distance = endTime - now;
+                            const now = new Date().getTime();
+                            const distance = endTime - now;
 
-                if (distance <= 0) {
-                    clearInterval(timerInterval);
-                    timerEl.innerHTML = "Đã kết thúc";
-                    isEnded = true;
+                            if (distance <= 0) {
+                                clearInterval(timerInterval);
+                                timerEl.innerHTML = "Đã kết thúc";
+                                isEnded = true;
 
-                    inputBid.disabled = true;
-                    btnBid.disabled = true;
+                                if(inputBid) inputBid.disabled = true;
+                                if(btnBid) btnBid.disabled = true;
 
-                    document.getElementById('finalPriceDisplay').innerText = currentPriceEl.innerText;
+                                document.getElementById('finalPriceDisplay').innerText = currentPriceEl.innerText;
+                                const overlay = document.getElementById('winnerOverlay');
+                                overlay.classList.remove('d-none');
+                                overlay.classList.add('d-flex');
 
-                    const overlay = document.getElementById('winnerOverlay');
-                    overlay.classList.remove('d-none');
-                    overlay.classList.add('d-flex');
+                                localStorage.removeItem('auction_price');
+                                localStorage.removeItem('auction_chat');
+                                localStorage.removeItem('auction_endtime');
+                                return;
+                            }
 
-                    // Xóa bộ nhớ tạm để lần sau vào lại là phiên mới
-                    localStorage.removeItem('auction_price');
-                    localStorage.removeItem('auction_chat');
-                    localStorage.removeItem('auction_endtime');
-                    return;
-                }
+                            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                            timerEl.innerText = String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
+                        }, 1000);
 
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                timerEl.innerText = String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-            }, 1000);
+                        // --- XỬ LÝ NÚT ĐẶT GIÁ ---
+                        if(btnBid) {
+                            btnBid.addEventListener('click', function() {
+                                if(isEnded) return;
+                                const bidAmount = parseInt(inputBid.value);
+                                if(isNaN(bidAmount) || bidAmount < 5000) {
+                                    alert("Anh nhập số tiền hợp lệ (từ 5.000 VNĐ) nhé!");
+                                    return;
+                                }
 
-            // --- 3. LOGIC BẠN NHẤN ĐẶT GIÁ ---
-            btnBid.addEventListener('click', function() {
-                if(isEnded) return;
+                                currentPriceValue += bidAmount;
+                                currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
+                                localStorage.setItem('auction_price', currentPriceValue);
 
-                const bidAmount = parseInt(inputBid.value);
-                if(isNaN(bidAmount) || bidAmount < 5000) {
-                    alert("Anh nhập số tiền hợp lệ (từ 5.000 VNĐ) nhé!");
-                    return;
-                }
+                                appendChatMessage('Bạn', bidAmount, true);
+                                inputBid.value = '';
+                                resetTimer();
+                            });
+                        }
 
-                currentPriceValue += bidAmount;
-                currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
-                localStorage.setItem('auction_price', currentPriceValue);
+                        // --- BOT ẢO ---
+                        const botNames = ['Khách_89', 'GamerPro', 'SưuTầmCổ_VN', 'Người dùng Ẩn Danh', 'HoangAnh_99'];
+                        function triggerBotBid() {
+                            if(isEnded) return;
+                            const randomBot = botNames[Math.floor(Math.random() * botNames.length)];
+                            const randomBid = Math.floor(Math.random() * 5 + 1) * 5000;
 
-                appendChatMessage('Bạn', bidAmount, true);
-                inputBid.value = '';
+                            currentPriceValue += randomBid;
+                            currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
+                            localStorage.setItem('auction_price', currentPriceValue);
 
-                // GỌI HÀM RESET THỜI GIAN
-                resetTimer();
-            });
+                            appendChatMessage(randomBot, randomBid, false);
+                            resetTimer();
 
-            // --- 4. HỆ THỐNG BOT ẢO THÔNG MINH ---
-            const botNames = ['Khách_89', 'GamerPro', 'SưuTầmCổ_VN', 'Người dùng Ẩn Danh', 'HoangAnh_99'];
-
-            function triggerBotBid() {
-                if(isEnded) return;
-
-                const randomBot = botNames[Math.floor(Math.random() * botNames.length)];
-                const randomBid = Math.floor(Math.random() * 5 + 1) * 5000;
-
-                currentPriceValue += randomBid;
-                currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
-                localStorage.setItem('auction_price', currentPriceValue);
-
-                appendChatMessage(randomBot, randomBid, false);
-
-                // BOT ĐẶT GIÁ CŨNG RESET THỜI GIAN
-                resetTimer();
-
-                // Lên lịch cho con bot tiếp theo (Thời gian ngẫu nhiên từ 8s đến 15s)
-                const nextBotTime = Math.floor(Math.random() * 7000) + 8000;
-                setTimeout(triggerBotBid, nextBotTime);
-            }
-
-            // Khởi động bot sau 5 giây đầu tiên
-            setTimeout(triggerBotBid, 5000);
-        });
-    </script>
-    <style>
+                            const nextBotTime = Math.floor(Math.random() * 7000) + 8000;
+                            setTimeout(triggerBotBid, nextBotTime);
+                        }
+                        setTimeout(triggerBotBid, 5000);
+                    });
+                </script>    <style>
         @@keyframes popIn {
             0% {
                 opacity: 0;

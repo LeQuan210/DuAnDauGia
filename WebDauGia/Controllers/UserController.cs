@@ -4,18 +4,26 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using WebDauGiaAppli.Interfaces;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using System.IO;
+using WebDauGiaInfrasData;
+using WebDauGiaDomain.Entities;
 
 namespace WebDauGiaUI.Controllers
 {
     public class UserController : Controller
     {
         private readonly IUserRepository _userRepository;
+        private readonly AuctionDbContext _context;
+
+        public UserController(AuctionDbContext context, IUserRepository userRepository  )     
+        {
+            _context = context;
+                _userRepository = userRepository;
+        }
 
         // Tiêm (Inject) IUserRepository vào thông qua Constructor
-        public UserController(IUserRepository userRepository)
-        {
-            _userRepository = userRepository;
-        }
+            
 
         public async Task<IActionResult> Index()
         {
@@ -26,11 +34,46 @@ namespace WebDauGiaUI.Controllers
             return View(users);
         }
 
+        [HttpGet]
         public IActionResult CreateAuction()
         {
             return View();
         }
 
+        
+        [HttpPost]
+        public async Task<IActionResult> CreateAuction(string ProductName, int CategoryId, decimal StartPrice, string Description, IFormFile ImageFile)
+        {
+            string imagePath = "/images/no-image.png"; // Ảnh mặc định nếu anh không tải ảnh
+
+            if (ImageFile != null)
+            {
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ImageFile.CopyToAsync(stream);
+                }
+                imagePath = "/uploads/" + fileName;
+            }
+
+            // TẠO ĐỐI TƯỢNG VÀ LƯU VÀO DATABASE
+            var product = new Product
+            {
+                Name = ProductName,
+                CategoryId = CategoryId,
+                StartPrice = StartPrice,
+                Description = Description,
+                ImageUrl = imagePath,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync(); // Lệnh này là quan trọng nhất để dữ liệu xuất hiện trong SSMS
+
+            return RedirectToAction("Index", "Home");
+        }
         public IActionResult MyAccount()
         {
             return View();
