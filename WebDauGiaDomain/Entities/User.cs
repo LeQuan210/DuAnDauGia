@@ -13,5 +13,6 @@ namespace WebDauGiaDomain.Entities
         public string Role { get; set; } = "Bidder"; // Bidder, Seller, Admin
         public int TrustScore { get; set; } = 100;
         public decimal WalletBalance { get; set; } = 0;
+        public bool IsLocked { get; set; } = false;
     }
 }

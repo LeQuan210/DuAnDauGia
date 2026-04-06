@@ -1,0 +1,45 @@
+﻿@model WebDauGiaDomain.Entities.User
+@{
+    ViewData["Title"] = "Nạp tiền vào ví";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <div class="text-center mb-4">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex p-3 mb-3">
+                        <i class="bi bi-wallet2 fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold">Ví Điện Tử</h4>
+                    <p class="text-muted small">Nạp tiền để tham gia các phiên đấu giá hấp dẫn</p>
+                </div>
+
+                <div class="bg-light rounded-3 p-3 text-center mb-4 border">
+                    <p class="text-muted mb-1">Số dư hiện tại</p>
+                    <h2 class="text-primary fw-bold mb-0">@((Model.WalletBalance).ToString("N0")) VNĐ</h2>
+                </div>
+
+                <form asp-action="Deposit" method="post">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success py-2 small fw-bold text-center">@TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger py-2 small fw-bold text-center">@TempData["Error"]</div>
+                    }
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Nhập số tiền muốn nạp (VNĐ)</label>
+                        <input type="number" name="amount" class="form-control form-control-lg fs-5" placeholder="VD: 50000" min="10000" step="10000" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-3 rounded-pill fs-5">
+                        Xác nhận nạp tiền
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

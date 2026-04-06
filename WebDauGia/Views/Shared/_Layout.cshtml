@@ -35,37 +35,35 @@
                 <div class="d-flex align-items-center ms-auto">
                     @if (User.Identity.IsAuthenticated && Context.Session.GetString("Username") != null)
                     {
-                        <div class="dropdown me-3 d-flex align-items-center">
-    <a href="#" class="nav-link text-dark position-relative p-0" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-bell-fill fs-5 text-secondary hover-primary"></i>
-        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-    </a>
-    
-    <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" aria-labelledby="notificationDropdown" style="width: 380px;">
-        
-        <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white rounded-top">
-            <span class="fw-bold text-dark">Các thông báo</span>
-            <div>
-                <i class="bi bi-check-all text-primary me-2" style="cursor: pointer; font-size: 1.2rem;" title="Đánh dấu đã đọc"></i>
-                <i class="bi bi-gear-fill text-primary" style="cursor: pointer; font-size: 1.1rem;" title="Cài đặt"></i>
-            </div>
-        </div>
+<div class="dropdown me-3 d-flex align-items-center">
+                            <a href="#" class="nav-link text-dark position-relative p-0" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell-fill fs-5 text-secondary hover-primary"></i>
+                                <span id="bellBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none"></span>
+                            </a>
+                            
+                            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" aria-labelledby="notificationDropdown" style="width: 380px;">
+                                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white rounded-top">
+                                    <span class="fw-bold text-dark">Các thông báo</span>
+                                    <div>
+                                        <i class="bi bi-check-all text-primary me-2" style="cursor: pointer; font-size: 1.2rem;" title="Đánh dấu đã đọc"></i>
+                                        <i class="bi bi-gear-fill text-primary" style="cursor: pointer; font-size: 1.1rem;" title="Cài đặt"></i>
+                                    </div>
+                                </div>
 
-        <div class="overflow-auto" style="max-height: 400px; background-color: #f8f9fa;">
-            
-            <div class="text-center py-5" id="emptyNotification">
-                <i class="bi bi-bell-slash text-muted display-4 d-block mb-3"></i>
-                <span class="text-muted fs-6">Không có thông báo</span>
-            </div>
+                                <div class="overflow-auto" id="notificationList" style="max-height: 400px; background-color: #f8f9fa;">
+                                    
+                                    <div class="text-center py-5" id="emptyNotification">
+                                        <i class="bi bi-bell-slash text-muted display-4 d-block mb-3"></i>
+                                        <span class="text-muted fs-6">Không có thông báo</span>
+                                    </div>
 
-            </div>
+                                </div>
 
-        <div class="p-2 border-top text-center bg-white rounded-bottom">
-            <a href="#" class="text-decoration-none fw-bold small">Xem tất cả</a>
-        </div>
-    </div>
-</div>   
-                        <div class="dropdown">
+                                <div class="p-2 border-top text-center bg-white rounded-bottom">
+                                    <a href="#" class="text-decoration-none fw-bold small">Xem tất cả</a>
+                                </div>
+                            </div>
+                        </div>                        <div class="dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center p-0" href="#" id="userMenu" data-bs-toggle="dropdown">
                                 <a asp-controller="Home" asp-action="Detail" class="d-block">
                                     <img src="https://ui-avatars.com/api/?name=@User.Identity.Name&background=0D6EFD&color=fff" class="rounded-circle me-2" width="35">
@@ -78,7 +76,7 @@
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                                 <li><a class="dropdown-item py-2" asp-controller="User" asp-action="Profile">👤 Hồ sơ cá nhân</a></li>
                                 <li><a class="dropdown-item py-2" asp-controller="User" asp-action="MyAuctions" >⚖️ Đấu giá của tôi</a></li>
-                                <li><a class="dropdown-item py-2" href="#">💰 Số dư: @User.FindFirst("WalletBalance")?.Value đ</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="User" asp-action="Deposit" >💰 Số dư: @User.FindFirst("WalletBalance")?.Value đ</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item py-2 text-danger" asp-controller="User" asp-action="Logout">🚪 Đăng xuất</a></li>
                             </ul>
@@ -242,7 +240,7 @@
             // --- 2. XỬ LÝ KHI BẤM VÀO TRÁI TIM YÊU THÍCH ---
             const favoriteButtons = document.querySelectorAll('.favorite-btn');
 
-        favoriteButtons.forEach(btn => {
+            favoriteButtons.forEach(btn => {
             btn.addEventListener('click', function() {
                 const productCard = this.closest('.product-card');
                 const productId = productCard.getAttribute('data-product-id');
@@ -287,6 +285,58 @@
                 });
             });
         });
+
+            // --- HỆ THỐNG LẮNG NGHE THÔNG BÁO TOÀN TRANG ---
+            const bellBadge = document.getElementById('bellBadge');
+            const emptyNoti = document.getElementById('emptyNotification');
+            const notiList = document.getElementById('notificationList');
+            const bellIcon = document.getElementById('notificationDropdown');
+
+            // 1. Mở kết nối với đài phát thanh
+            const globalConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/auctionHub")
+                .build();
+
+            // 2. Lắng nghe sự kiện "ReceiveBid"
+            globalConnection.on("ReceiveBid", function (productId, userName, amount) {
+                const currentUser = '@(User.Identity.IsAuthenticated ? User.Identity.Name : "")';
+                
+                // Nếu người vừa đặt giá KHÔNG PHẢI là mình, thì mới báo chuông
+                if (userName !== currentUser && userName !== "") {
+                    
+                    // Bật chấm đỏ
+                    if(bellBadge) bellBadge.classList.remove('d-none');
+                    // Ẩn chữ "Không có thông báo"
+                    if(emptyNoti) emptyNoti.classList.add('d-none');
+
+                    // Tạo một thẻ thông báo mới
+                    const newNoti = document.createElement('div');
+                    newNoti.className = 'p-3 border-bottom bg-white';
+                    newNoti.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3">
+                                <i class="bi bi-currency-dollar fs-5"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0 small"><strong>${userName}</strong> vừa đặt <span class="text-danger fw-bold">${amount.toLocaleString('vi-VN')} đ</span> trong phiên đấu giá.</p>
+                                <small class="text-muted" style="font-size: 0.75rem;">Vừa xong</small>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Nhét thông báo mới lên trên cùng của danh sách
+                    if(notiList) notiList.prepend(newNoti);
+                }
+            });
+
+            globalConnection.start().catch(err => console.error(err));
+            
+            // 3. Tắt chấm đỏ khi anh bấm vào xem chuông
+            if(bellIcon) {
+                bellIcon.addEventListener('click', function() {
+                    if(bellBadge) bellBadge.classList.add('d-none');
+                });
+            }
     });
     </script>
 </body>

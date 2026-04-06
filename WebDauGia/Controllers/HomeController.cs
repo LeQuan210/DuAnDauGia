@@ -6,6 +6,7 @@ using WebDauGiaAppli.Interfaces;
 using WebDauGiaDomain.Entities;
 using WebDauGiaInfrasData;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace WebDauGiaUI.Controllers
@@ -56,31 +57,46 @@ namespace WebDauGiaUI.Controllers
             return View();
         }
 
-        public IActionResult Explore(string category)
+        // 1. Hàm xử lý ô Tìm kiếm theo tên
+        [HttpGet]
+        public IActionResult Search(string query)
         {
-            // Thêm dòng này để View biết đang ở danh mục nào
-            ViewBag.Category = category;
-
-            ViewBag.CategoryTitle = category switch
+            if (string.IsNullOrEmpty(query))
             {
-                "tech" => "Đồ công nghệ",
-                "antique" => "Đồ cổ & Sưu tầm",
-                "ending" => "Phiên sắp kết thúc",
-                "zero" => "Đấu giá từ 0đ",
-                _ => "Khám phá Sản phẩm"
-            };
-            return View();
+                return RedirectToAction("Index"); // Nếu không gõ gì mà bấm tìm thì đuổi về trang chủ
+            }
+
+            // Dùng lệnh Where và Contains để tìm các sản phẩm có tên chứa từ khóa
+            var products = _context.Products
+                .Where(p => p.Name.Contains(query))
+                .ToList();
+
+            ViewBag.Keyword = query; // Lưu lại từ khóa để đem ra ngoài hiển thị
+            return View(products);
         }
 
-        public IActionResult Search(string query) 
-        { 
-            ViewBag.Query = query; 
-            return View(); 
-        }
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        // 2. Hàm xử lý khi bấm vào Menu Danh mục bên trái
+        [HttpGet]
+        public IActionResult Explore(int categoryId)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            // Dùng lệnh Where để lọc đúng mã danh mục
+            var products = _context.Products
+                .Where(p => p.CategoryId == categoryId)
+                .ToList();
+
+            // Tạm thời gán một cái tên danh mục dựa vào ID để hiển thị cho đẹp
+            ViewBag.CategoryName = categoryId switch
+            {
+                1 => "Đồ điện tử & Công nghệ",
+                2 => "Mô hình & Thẻ bài Game",
+                3 => "Phương tiện đi lại",
+                4 => "Trang sức & Đồng hồ",
+                5 => "Kỷ vật thể thao",
+                _ => "Sản phẩm"
+            };
+
+            return View(products);
         }
+
     }
 }

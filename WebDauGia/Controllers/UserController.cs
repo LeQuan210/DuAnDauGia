@@ -11,6 +11,7 @@ using WebDauGiaDomain.Entities;
 using MailKit.Net.Smtp;
 using MimeKit;
 using System.Net.Http;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebDauGiaUI.Controllers
 {
@@ -36,7 +37,7 @@ namespace WebDauGiaUI.Controllers
             // Đưa dữ liệu sang View để hiển thị
             return View(users);
         }
-
+        [Authorize] // Chỉ cho phép người đã đăng nhập mới được tạo đấu giá
         [HttpGet]
         public IActionResult CreateAuction()
         {
@@ -108,6 +109,7 @@ namespace WebDauGiaUI.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password) // THÊM PASSWORD VÀO ĐÂY
         {
+
             var captchaResponse = Request.Form["g-recaptcha-response"];
             if (string.IsNullOrEmpty(captchaResponse))
             {
@@ -131,6 +133,12 @@ namespace WebDauGiaUI.Controllers
             // Tìm user trong Database
             var user = await _userRepository.GetUserByUsernameAsync(username);
 
+            if (user.IsLocked)
+            {
+                TempData["Error"] = "Tài khoản của anh đang bị tạm khóa do vi phạm quy chế.";
+                return View();
+            }
+
             // KIỂM TRA THÊM MẬT KHẨU
             if (user != null && user.PasswordHash == password)
             {
@@ -153,6 +161,7 @@ namespace WebDauGiaUI.Controllers
 
             TempData["Error"] = "Tài khoản hoặc mật khẩu không chính xác!";
             return View();
+
         }
         // Xử lý Đăng xuất
         public async Task<IActionResult> Logout()
@@ -322,7 +331,7 @@ namespace WebDauGiaUI.Controllers
             TempData["Error"] = "Không tìm thấy tài khoản của anh trong hệ thống.";
             return View();
         }
-
+        [Authorize] // Chỉ cho phép người đã đăng nhập mới được yêu thích sản phẩm
         [HttpPost]
         public async Task<IActionResult> ToggleFavorite(int productId)
         {
@@ -354,7 +363,7 @@ namespace WebDauGiaUI.Controllers
                 return Json(new { success = true, isFavorited = false, message = "Đã xóa khỏi yêu thích." });
             }
         }
-
+        
         [HttpGet]
         public async Task<IActionResult> FavoriteProducts()
         {
@@ -379,6 +388,72 @@ namespace WebDauGiaUI.Controllers
 
             // 4. Trả về View cùng với danh sách sản phẩm
             return View(favoriteProducts);
+        }
+
+        // 1. Giao diện trang Nạp Tiền
+        [Authorize] // Chỉ cho phép người đã đăng nhập mới được nạp tiền
+        [HttpGet]
+        public IActionResult Deposit()
+        {
+            var userIdString = User.FindFirst("UserId")?.Value;
+            if (userIdString == null) return RedirectToAction("Login");
+
+            // Lấy thông tin người dùng lên để xem số dư hiện tại
+            var user = _context.Users.Find(int.Parse(userIdString));
+            return View(user);
+        }
+
+        // 2. Xử lý cộng tiền vào Database khi bấm Nạp
+        [HttpPost]
+        public async Task<IActionResult> Deposit(decimal amount)
+        {
+            var userIdString = User.FindFirst("UserId")?.Value;
+            if (userIdString == null) return RedirectToAction("Login");
+
+            if (amount < 10000)
+            {
+                TempData["Error"] = "Anh nạp tối thiểu 10.000 VNĐ nhé.";
+                return RedirectToAction("Deposit");
+            }
+
+            var user = _context.Users.Find(int.Parse(userIdString));
+            user.WalletBalance += amount; // Cộng tiền vào ví
+            _context.Users.Update(user);
+            var log = new SystemLog
+            {
+                UserId = user.UserID,
+                Action = $"Nạp thành công {amount:N0} VNĐ vào ví",
+                Timestamp = DateTime.Now,
+                IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown"
+            };
+            _context.SystemLogs.Add(log);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Tuyệt vời! Đã nạp thành công {amount.ToString("N0")} VNĐ vào ví.";
+            return RedirectToAction("Deposit");
+        }
+
+        // 3. Hàm API ngầm để kiểm tra ví trước khi cho phép Đặt giá
+        [HttpPost]
+        public IActionResult ValidateBidBalance(decimal bidAmount)
+        {
+            var userIdString = User.FindFirst("UserId")?.Value;
+           if (!User.Identity.IsAuthenticated)
+    {
+        // Trả về một mã riêng để JS biết đường đuổi đi đăng nhập
+        return Json(new { success = false, needsLogin = true, message = "Anh chưa đăng nhập rồi!" });
+    }
+
+            var user = _context.Users.Find(int.Parse(userIdString));
+
+            // Luật đấu giá: Số dư trong ví phải lớn hơn hoặc bằng số tiền định đặt
+            // (Thực tế người ta hay thu cọc 10%, nhưng mình cứ làm chặt chẽ thế này trước nhé)
+            if (user.WalletBalance < bidAmount)
+            {
+                return Json(new { success = false, message = "Số dư trong ví không đủ. Anh vui lòng nạp thêm tiền nhé!" });
+            }
+
+            return Json(new { success = true });
         }
     }
 }

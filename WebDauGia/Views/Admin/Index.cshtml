@@ -1,0 +1,43 @@
+﻿@model IEnumerable<WebDauGiaDomain.Entities.User>
+<div class="container my-5">
+    <h3 class="fw-bold mb-4"><i class="bi bi-shield-lock me-2"></i>Quản lý người dùng</h3>
+    <table class="table table-hover bg-white shadow-sm rounded-3">
+        <thead class="table-primary">
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Quyền</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in Model)
+            {
+                <tr>
+                    <td>@u.Username</td>
+                    <td>@u.Email</td>
+                    <td><span class="badge bg-info">@u.Role</span></td>
+                    <td>
+                        @if (u.IsLocked)
+                        {
+                            <span class="text-danger fw-bold">Bị khóa</span>
+                        }
+                        else
+                        {
+
+                            <span class="text-success fw-bold">Hoạt động</span>
+                        }
+                    </td>
+                    <td>
+                        <form asp-action="ToggleLock" asp-route-id="@u.UserID" method="post">
+                            <button type="submit" class="btn btn-sm @(u.IsLocked ? "btn-success" : "btn-danger")">
+                                @(u.IsLocked ? "Mở khóa" : "Khóa tài khoản")
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
