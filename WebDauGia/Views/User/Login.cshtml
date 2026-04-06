@@ -30,6 +30,15 @@
                         <label class="form-check-label text-muted select-none" for="rememberMe">Ghi nhớ đăng nhập</label>
                     </div>
 
+                    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+                    <div class="mb-3 d-flex justify-content-center">
+                        <div class="g-recaptcha" data-sitekey="6Lc136gsAAAAADFh_DTJ5rn2vtOf6hpqc0QfMGi5"></div>
+                    </div>
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger py-2 small fw-bold text-center">@TempData["Error"]</div>
+                    }
+
                     <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mb-3">Đăng nhập</button>
 
                     <div class="text-center mt-2 border-top pt-3">

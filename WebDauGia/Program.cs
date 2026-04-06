@@ -7,6 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(5); // OTP chỉ có hiệu lực trong 5 phút
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 // Đăng ký cơ chế xác thực bằng Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -41,6 +48,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseAuthentication(); // Thêm middleware xác thực trước Authorization
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(

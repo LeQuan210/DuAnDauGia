@@ -5,6 +5,7 @@ using WebDauGia.Models;
 using WebDauGiaAppli.Interfaces;
 using WebDauGiaDomain.Entities;
 using WebDauGiaInfrasData;
+using System.Threading.Tasks;
 
 
 namespace WebDauGiaUI.Controllers
@@ -28,6 +29,21 @@ namespace WebDauGiaUI.Controllers
             return View(products); // Gửi danh sách này sang giao diện
         }
 
+        // Anh dán vào ngay dưới hàm Index nhé
+        public async Task<IActionResult> RandomizeAuctionEndTime()
+        {
+            var products = _context.Products.ToList();
+            var random = new Random();
+            foreach (var product in products)
+            {
+                // Gán ngẫu nhiên từ 1 tiếng đến 4 tiếng nữa kết thúc
+                int randomMinutes = random.Next(1 * 60, 4 * 60);
+                product.AuctionEndTime = DateTime.Now.AddMinutes(randomMinutes);
+                _context.Products.Update(product);
+            }
+            await _context.SaveChangesAsync();
+            return Content("Đã gán thời gian ngẫu nhiên thành công! Anh hãy xóa hàm này đi nhé.");
+        }
         public IActionResult Privacy()
         {
             return View();

@@ -51,16 +51,7 @@
     <div class="row row-cols-1 row-cols-md-4 g-4">
         @foreach (var item in Model)
         {
-            <div class="col">
-                <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
-                    <img src="@item.ImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;">
-                    <div class="card-body">
-                        <h6 class="fw-bold text-truncate">@item.Name</h6>
-                        <p class="text-danger fw-bold mb-2">@item.StartPrice.ToString("N0") đ</p>
-                        <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-outline-primary w-100 rounded-pill">Tham gia đấu giá</a>
-                    </div>
-                </div>
-            </div>
+            <partial name="_ProductCard" model="item" />
         }
     </div>
 </div>

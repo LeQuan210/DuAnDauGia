@@ -1,0 +1,37 @@
+﻿@model IEnumerable<WebDauGiaDomain.Entities.Product>
+
+@{
+    ViewData["Title"] = "Sản phẩm yêu thích";
+}
+
+<div class="container my-5">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+        <h3 class="fw-bold text-danger mb-0">
+            <i class="bi bi-heart-fill me-2"></i>Danh Sách Yêu Thích
+        </h3>
+        <span class="badge bg-secondary rounded-pill">@Model.Count() sản phẩm</span>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 shadow-sm bg-white rounded-4">
+            <div class="mb-4">
+                <i class="bi bi-heart-break text-muted" style="font-size: 5rem;"></i>
+            </div>
+            <h4 class="text-muted">Chưa có món đồ nào "lọt vào mắt xanh" của anh cả.</h4>
+            <p class="text-secondary mb-4">Hãy dạo quanh một vòng và chọn những món đồ ưng ý nhé!</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill px-4 py-2 fw-bold">
+                Khám phá ngay
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var item in Model)
+            {
+                <partial name="_ProductCard" model="item" />
+            }
+        </div>
+    }
+</div>

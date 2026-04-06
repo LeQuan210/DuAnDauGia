@@ -17,6 +17,7 @@ namespace WebDauGiaInfrasData
         public DbSet<User> Users { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<AuctionSession> AuctionSessions { get; set; }
+        public DbSet<FavoriteProduct> FavoriteProducts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
