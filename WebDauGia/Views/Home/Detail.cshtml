@@ -105,173 +105,125 @@
     </div>
 </div>
 
-@section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+@@section Scripts {
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const timerEl = document.getElementById('auctionTimer');
-            let isEnded = false;
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. Lấy đúng ID của sản phẩm hiện tại
+        const productId = "@Model.Id";
+        const currentUser = "@(User.Identity.IsAuthenticated? User.Identity.Name : "")";
 
-            const btnBid = document.getElementById('btnPlaceBid');
-            const inputBid = document.getElementById('bidInput');
-            const chatBox = document.getElementById('chatBox');
-            const currentPriceEl = document.getElementById('currentPrice');
+        // 2. Kết nối tới đài phát thanh (Hub)
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/auctionHub")
+            .build();
 
-            // Giữ lại cơ chế đếm ngược thời gian
-            let endTime = localStorage.getItem('auction_endtime');
-            const COUNTDOWN_DURATION = 60000 * 5;
-            const nowTime = new Date().getTime();
+        // 3. Lắng nghe khi có người đặt giá thành công
+        connection.on("ReceiveBid", function (user, amount) {
+            // Cập nhật giá màu đỏ to đùng
+            document.getElementById("currentPrice").innerText = new Intl.NumberFormat('vi-VN').format(amount) + " đ";
 
-            if (!endTime || parseInt(endTime) < nowTime) {
-                endTime = nowTime + COUNTDOWN_DURATION;
-                localStorage.setItem('auction_endtime', endTime);
-            } else {
-                endTime = parseInt(endTime);
-            }
+            // Thêm tin nhắn vào hộp chat
+            const chatBox = document.getElementById("chatBox");
+            const isMe = user === currentUser;
 
-            function resetTimer() {
-                endTime = new Date().getTime() + COUNTDOWN_DURATION;
-                localStorage.setItem('auction_endtime', endTime);
-                timerEl.style.color = 'yellow';
-                setTimeout(() => timerEl.style.color = '', 500);
-            }
+            const div = document.createElement("div");
+            div.className = "d-flex mb-3 " + (isMe ? "justify-content-end" : "");
 
-            // Mức giá khởi điểm lúc vào phòng
-            let currentPriceValue = 2542000;
+            const innerDiv = document.createElement("div");
+            innerDiv.className = isMe
+                ? "bg-primary bg-opacity-10 border border-primary rounded-4 p-2 shadow-sm text-end"
+                : "bg-white border rounded-4 p-2 shadow-sm";
+            innerDiv.style.maxWidth = "85%";
 
-            function appendChatMessage(senderName, amount, isSelf) {
-                const newMsg = document.createElement('div');
-                newMsg.className = isSelf ? "d-flex mb-3 justify-content-end" : "d-flex mb-3";
+            innerDiv.innerHTML = `
+                <small class="fw-bold ${isMe ? 'text-primary pe-1' : 'text-secondary ps-1'} d-block">${isMe ? 'Bạn' : user}</small>
+                <span class="text-dark px-1">Đã đặt <strong class="text-danger">${new Intl.NumberFormat('vi-VN').format(amount)} VNĐ</strong></span>
+            `;
 
-                const alignStyle = isSelf ? "text-end" : "text-start";
-                const bgClass = isSelf ? "bg-primary bg-opacity-10 border border-primary" : "bg-white border";
-                const nameColor = isSelf ? "text-primary pe-1" : "text-secondary ps-1";
-                const actionText = isSelf ? "Bạn đã đặt thêm" : "Đã đặt thêm";
+            div.appendChild(innerDiv);
+            chatBox.appendChild(div);
 
-                newMsg.innerHTML = `
-                    <div class="${bgClass} rounded-4 p-2 shadow-sm ${alignStyle}" style="max-width: 85%; animation: popIn 0.3s ease-out;">
-                        <small class="fw-bold ${nameColor} d-block">${senderName}</small>
-                        <span class="text-dark px-1">${actionText} <strong class="text-danger">${amount.toLocaleString('vi-VN')} VNĐ</strong></span>
-                    </div>
-                `;
-                chatBox.appendChild(newMsg);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
+            // Tự động cuộn xuống tin nhắn mới nhất
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
 
-            // --- KẾT NỐI BỘ ĐÀM SIGNALR ---
-            const connection = new signalR.HubConnectionBuilder()
-                .withUrl("/auctionHub")
-                .build();
+        // Khởi động kết nối và tham gia đúng phòng của sản phẩm này
+        connection.start().then(function () {
+            connection.invoke("JoinProductGroup", productId);
 
-            // Lắng nghe tiếng loa phát thanh từ Hub
-            connection.on("ReceiveBid", function (productId, userName, amount) {
-                // 1. Cộng tiền
-                currentPriceValue += amount;
-                currentPriceEl.innerText = currentPriceValue.toLocaleString('vi-VN') + " đ";
+            // Xóa dòng chữ "Lịch sử trả giá..." mặc định nếu kết nối thành công
+            const chatBox = document.getElementById("chatBox");
+            chatBox.innerHTML = '';
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
 
-                // 2. Xác định xem ai vừa gửi để vẽ khung chat cho đúng bên
-                const isSelf = userName === '@User.Identity.Name';
-                const displayName = isSelf ? 'Bạn' : userName;
+        // 4. Xử lý khi anh bấm nút ĐẶT GIÁ
+        const btnBid = document.getElementById("btnPlaceBid");
+        if (btnBid) {
+            btnBid.addEventListener('click', function (e) {
+                e.preventDefault();
 
-                appendChatMessage(displayName, amount, isSelf);
-                resetTimer();
-            });
-
-            // Khởi động kết nối
-            connection.start().then(function () {
-                console.log("Đã kết nối thành công với bộ đàm!");
-            }).catch(function (err) {
-                return console.error(err.toString());
-            });
-
-            // --- XỬ LÝ NÚT BẤM ---
-        // --- XỬ LÝ NÚT BẤM ---
-                    if(btnBid) {
-                        btnBid.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            if(isEnded) return;
-
-                            const bidAmount = parseInt(inputBid.value);
-                            if(isNaN(bidAmount) || bidAmount < 5000) {
-                                alert("Anh nhập số tiền hợp lệ (từ 5.000 VNĐ) nhé!");
-                                return;
-                            }
-
-                            // 1. Vô hiệu hóa nút tạm thời để tránh bấm 2 lần
-                            btnBid.disabled = true;
-                            btnBid.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
-
-                            // 2. Chạy ngầm xuống hỏi Thu ngân xem ví có đủ tiền không
-                            fetch('/User/ValidateBidBalance', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                },
-                                body: 'bidAmount=' + bidAmount
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                    if (data.needsLogin) {
-                                    // Nếu server bảo cần login, mình chuyển hướng luôn
-                                     window.location.href = '/User/Login?ReturnUrl=' + window.location.pathname;
-                                    return;
-                                }
-                                if (data.success) {
-                                    // 3. Nếu đủ tiền, MỚI cho phép bật bộ đàm SignalR phát sóng
-                                    const currentUser = '@User.Identity.Name' || 'Khách Vô Danh';
-                                    const productId = "1";
-
-                                    connection.invoke("SendBid", productId, currentUser, bidAmount).catch(function (err) {
-                                        console.error(err.toString());
-                                    });
-
-                                    inputBid.value = '';
-                                } else {
-                                    // Nếu thiếu tiền, báo lỗi và có thể hỏi anh ấy có muốn sang trang nạp không
-                                    if(confirm(data.message + '\nAnh có muốn sang trang Nạp tiền ngay bây giờ không?')) {
-                                        window.location.href = '/User/Deposit';
-                                    }
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                alert('Có lỗi hệ thống khi kiểm tra số dư.');
-                            })
-                            .finally(() => {
-                                // Trả lại trạng thái cho nút bấm
-                                btnBid.disabled = false;
-                                btnBid.innerHTML = 'ĐẶT GIÁ';
-                            });
-                        });
-                    }
-            // Vòng lặp đếm ngược (giữ nguyên)
-            const timerInterval = setInterval(function() {
-                if (isEnded) return;
-                const now = new Date().getTime();
-                const distance = endTime - now;
-
-                if (distance <= 0) {
-                    clearInterval(timerInterval);
-                    timerEl.innerHTML = "Đã kết thúc";
-                    isEnded = true;
-
-                    if(inputBid) inputBid.disabled = true;
-                    if(btnBid) btnBid.disabled = true;
-
-                    document.getElementById('finalPriceDisplay').innerText = currentPriceEl.innerText;
-                    const overlay = document.getElementById('winnerOverlay');
-                    overlay.classList.remove('d-none');
-                    overlay.classList.add('d-flex');
+                if (!currentUser) {
+                    window.location.href = '/User/Login?ReturnUrl=' + window.location.pathname;
                     return;
                 }
 
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                timerEl.innerText = String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-            }, 1000);
-        });
-    </script>
+                const inputBid = document.getElementById("bidInput");
+                const bidAmount = parseInt(inputBid.value);
+
+                if (isNaN(bidAmount) || bidAmount < 5000) {
+                    alert("Anh nhập số tiền hợp lệ (từ 5.000 VNĐ) nhé!");
+                    return;
+                }
+
+                // Vô hiệu hóa nút tạm thời
+                btnBid.disabled = true;
+                btnBid.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+
+                // Chạy ngầm hỏi Thu ngân xem ví có đủ tiền không
+                fetch('/User/ValidateBidBalance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'bidAmount=' + bidAmount
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.needsLogin) {
+                        window.location.href = '/User/Login?ReturnUrl=' + window.location.pathname;
+                        return;
+                    }
+                    if (data.success) {
+                        // Tiền đầy túi, tự tin phát sóng lên Hub
+                        connection.invoke("SendBid", productId, currentUser, bidAmount).catch(function (err) {
+                            console.error(err.toString());
+                        });
+                        inputBid.value = '';
+                    } else {
+                        if (confirm(data.message + '\nAnh có muốn sang trang Nạp tiền ngay bây giờ không?')) {
+                            window.location.href = '/User/Deposit';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi hệ thống khi kiểm tra số dư.');
+                })
+                .finally(() => {
+                    btnBid.disabled = false;
+                    btnBid.innerHTML = 'ĐẶT GIÁ';
+                });
+            });
+        }
+    });
+</script>
+
+
+
     <style>
         @@keyframes popIn {
             0%
