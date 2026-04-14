@@ -1,24 +1,27 @@
-﻿@{
+﻿@model WebDauGiaDomain.Entities.Product
+@{
     ViewData["Title"] = "Phòng Đấu Giá";
 }
+
+
 
 <div class="container my-4">
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="card shadow-sm border-0 mb-3 rounded-4 overflow-hidden">
                 <div class="bg-light text-center d-flex align-items-center justify-content-center" style="height: 450px;">
-                    <img src="https://via.placeholder.com/800x600?text=Anh+San+Pham+Thuc+Te" class="img-fluid w-100 h-100" alt="Sản phẩm" style="object-fit: cover;">
+                    <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/picture/default-product.jpg" : Model.ImageUrl)" class="img-fluid w-100 h-100" alt="@Model.Name" style="object-fit: cover;">
                 </div>
             </div>
 
             <div class="card shadow-sm border-0 mb-3 rounded-4">
                 <div class="card-header bg-white border-bottom fw-bold fs-5 py-3">
-                    Tên sản phẩm nổi bật hiển thị ở đây
+                    @Model.Name
                 </div>
                 <div class="card-body">
-                    <p class="text-muted mb-0" style="line-height: 1.8;">
-                        Đây là khu vực hiển thị thông tin mô tả chi tiết của sản phẩm. Tình trạng, kích thước, chất liệu, nguồn gốc xuất xứ và các lưu ý khác dành cho người tham gia đấu giá sẽ được liệt kê đầy đủ tại đây để đảm bảo tính minh bạch.
-                    </p>
+                    <div class="text-muted mb-0" style="line-height: 1.8;">
+                        @Html.Raw(Model.Description)
+                    </div>
                 </div>
             </div>
 
@@ -27,7 +30,7 @@
                     <div class="card shadow-sm border-0 bg-light h-100 rounded-4">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <p class="text-muted mb-1 fs-6">Giá khởi điểm</p>
-                            <h4 class="fw-bold text-dark mb-0">500.000 đ</h4>
+                            <h4 class="fw-bold text-dark mb-0">@Model.StartPrice.ToString("N0") đ</h4>
                         </div>
                     </div>
                 </div>
@@ -35,7 +38,7 @@
                     <div class="card shadow-sm border-0 border-primary border-2 h-100 rounded-4 bg-primary bg-opacity-10">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <p class="text-primary fw-bold mb-1 fs-6">Giá hiện tại</p>
-                            <h3 class="fw-bold text-danger mb-0" id="currentPrice">2.542.000 đ</h3>
+                            <h3 class="fw-bold text-danger mb-0" id="currentPrice">@Model.CurrentPrice.ToString("N0") đ</h3>
                         </div>
                     </div>
                 </div>
@@ -49,7 +52,7 @@
                     <span class="fw-bold fs-5"><i class="bi bi-activity me-2 text-primary"></i>Diễn biến</span>
                     <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill shadow-sm d-flex align-items-center">
                         <i class="bi bi-hourglass-split me-1"></i>
-                        <span id="auctionTimer" data-endtime="@DateTime.Now.AddMinutes(1).ToString("yyyy-MM-ddTHH:mm:ss")">Đang tính...</span>
+                        <span class="countdown-timer" data-endtime="@Model.AuctionEndTime.ToString("yyyy-MM-ddTHH:mm:ss")">Đang tính...</span>
                     </span>
                 </div>
 
@@ -69,30 +72,8 @@
                 }
 
                 <div class="card-body bg-light overflow-auto p-3" id="chatBox" style="height: 480px; max-height: 480px;">
-                    <div class="d-flex mb-3">
-                        <div class="bg-white border rounded-4 p-2 shadow-sm" style="max-width: 85%;">
-                            <small class="fw-bold text-secondary d-block ps-1">Người dùng A</small>
-                            <span class="text-dark px-1">Đã đặt <strong class="text-danger">10.000 VNĐ</strong></span>
-                        </div>
-                    </div>
-                    <div class="d-flex mb-3">
-                        <div class="bg-white border rounded-4 p-2 shadow-sm" style="max-width: 85%;">
-                            <small class="fw-bold text-secondary d-block ps-1">Người dùng B</small>
-                            <span class="text-dark px-1">Đã đặt <strong class="text-danger">23.000 VNĐ</strong></span>
-                        </div>
-                    </div>
-                    <div class="d-flex mb-3">
-                        <div class="bg-white border rounded-4 p-2 shadow-sm" style="max-width: 85%;">
-                            <small class="fw-bold text-secondary d-block ps-1">Người dùng C</small>
-                            <span class="text-dark px-1">Đã đặt <strong class="text-danger">42.000 VNĐ</strong></span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex mb-3 justify-content-end">
-                        <div class="bg-primary bg-opacity-10 border border-primary rounded-4 p-2 shadow-sm text-end" style="max-width: 85%;">
-                            <small class="fw-bold text-primary d-block pe-1">Bạn</small>
-                            <span class="text-dark px-1">Đã đặt <strong class="text-danger">50.000 VNĐ</strong></span>
-                        </div>
+                    <div class="text-center text-muted small py-3">
+                        <i class="bi bi-info-circle me-1"></i> Lịch sử trả giá sẽ xuất hiện tại đây...
                     </div>
                 </div>
 

@@ -16,6 +16,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+builder.Services.AddHostedService<WebDauGiaUI.Services.AuctionWorker>(); // Đăng ký dịch vụ chạy ngầm kiểm tra đấu giá
 // Đăng ký cơ chế xác thực bằng Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

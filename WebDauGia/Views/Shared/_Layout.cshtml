@@ -35,48 +35,54 @@
                 <div class="d-flex align-items-center ms-auto">
                     @if (User.Identity.IsAuthenticated && Context.Session.GetString("Username") != null)
                     {
-<div class="dropdown me-3 d-flex align-items-center">
-                            <a href="#" class="nav-link text-dark position-relative p-0" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-bell-fill fs-5 text-secondary hover-primary"></i>
-                                <span id="bellBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none"></span>
-                            </a>
+                    <div class="dropdown me-3 d-flex align-items-center">
+                                                <a href="#" class="nav-link text-dark position-relative p-0" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-bell-fill fs-5 text-secondary hover-primary"></i>
+                                                    <span id="bellBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none"></span>
+                                                </a>
                             
-                            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" aria-labelledby="notificationDropdown" style="width: 380px;">
-                                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white rounded-top">
-                                    <span class="fw-bold text-dark">Các thông báo</span>
-                                    <div>
-                                        <i class="bi bi-check-all text-primary me-2" style="cursor: pointer; font-size: 1.2rem;" title="Đánh dấu đã đọc"></i>
-                                        <i class="bi bi-gear-fill text-primary" style="cursor: pointer; font-size: 1.1rem;" title="Cài đặt"></i>
-                                    </div>
-                                </div>
+                                                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" aria-labelledby="notificationDropdown" style="width: 380px;">
+                                                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white rounded-top">
+                                                        <span class="fw-bold text-dark">Các thông báo</span>
+                                                        <div>
+                                                            <i class="bi bi-check-all text-primary me-2" style="cursor: pointer; font-size: 1.2rem;" title="Đánh dấu đã đọc"></i>
+                                                            <i class="bi bi-gear-fill text-primary" style="cursor: pointer; font-size: 1.1rem;" title="Cài đặt"></i>
+                                                        </div>
+                                                    </div>
 
-                                <div class="overflow-auto" id="notificationList" style="max-height: 400px; background-color: #f8f9fa;">
+                                                    <div class="overflow-auto" id="notificationList" style="max-height: 400px; background-color: #f8f9fa;">
                                     
-                                    <div class="text-center py-5" id="emptyNotification">
-                                        <i class="bi bi-bell-slash text-muted display-4 d-block mb-3"></i>
-                                        <span class="text-muted fs-6">Không có thông báo</span>
-                                    </div>
+                                                        <div class="text-center py-5" id="emptyNotification">
+                                                            <i class="bi bi-bell-slash text-muted display-4 d-block mb-3"></i>
+                                                            <span class="text-muted fs-6">Không có thông báo</span>
+                                                        </div>
 
-                                </div>
+                                                    </div>
 
-                                <div class="p-2 border-top text-center bg-white rounded-bottom">
-                                    <a href="#" class="text-decoration-none fw-bold small">Xem tất cả</a>
-                                </div>
-                            </div>
-                        </div>                        <div class="dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center p-0" href="#" id="userMenu" data-bs-toggle="dropdown">
-                                <a asp-controller="Home" asp-action="Detail" class="d-block">
-                                    <img src="https://ui-avatars.com/api/?name=@User.Identity.Name&background=0D6EFD&color=fff" class="rounded-circle me-2" width="35">
-                                    </a>
-                                <div class="d-none d-lg-block">
-                                    <small class="text-muted d-block" style="font-size: 10px;">Xin chào,</small>
-                                    <span class="fw-bold text-dark">@User.Identity.Name</span>
-                                </div>
+                                                    <div class="p-2 border-top text-center bg-white rounded-bottom">
+                                                        <a href="#" class="text-decoration-none fw-bold small">Xem tất cả</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                        <div class="dropdown me-3">
+                            <a href="#" class="d-block link-dark text-decoration-none" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="@(User.FindFirst("AvatarUrl")?.Value ?? "/picture/default-avatar.png")" class="rounded-circle border border-primary shadow-sm" width="40" height="40">
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" style="width: 250px;">
                                 <li><a class="dropdown-item py-2" asp-controller="User" asp-action="Profile">👤 Hồ sơ cá nhân</a></li>
-                                <li><a class="dropdown-item py-2" asp-controller="User" asp-action="MyAuctions" >⚖️ Đấu giá của tôi</a></li>
-                                <li><a class="dropdown-item py-2" asp-controller="User" asp-action="Deposit" >💰 Số dư: @User.FindFirst("WalletBalance")?.Value đ</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="User" asp-action="MyAuctions">⚖️ Đấu giá của tôi</a></li>
+
+                                <li><a class="dropdown-item py-2 fw-bold text-primary" asp-controller="User" asp-action="MyAccount"><i class="bi bi-gear me-1"></i> Thiết lập tài khoản</a></li>
+
+                                <li><a class="dropdown-item py-2 fw-bold text-success" asp-controller="Home" asp-action="Detail"><i class="bi bi-plus-circle me-1"></i> Tạo/Xem phiên đấu giá</a></li>
+
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item py-2 text-danger fw-bold" asp-controller="Admin" asp-action="Index"><i class="bi bi-shield-lock me-2"></i> Trang Quản Trị</a></li>
+                                }
+
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item py-2 text-danger" asp-controller="User" asp-action="Logout">🚪 Đăng xuất</a></li>
                             </ul>
@@ -159,8 +165,8 @@
                     <h5 class="text-uppercase mb-4 fw-bold text-warning">Khám phá</h5>
                     <p><a asp-controller="Home" asp-action="Explore" asp-route-category="tech" class="text-white text-decoration-none">Đồ công nghệ</a></p>
                     <p><a asp-controller="Home" asp-action="Explore" asp-route-category="antique" class="text-white text-decoration-none">Đồ cổ & Sưu tầm</a></p>
-                    <p><a asp-controller="Home" asp-action="Explore" asp-route-category="ending" class="text-white text-decoration-none">Phiên sắp kết thúc</a></p>
-                    <p><a asp-controller="Home" asp-action="Explore" asp-route-category="zero" class="text-white text-decoration-none">Đấu giá từ 0đ</a></p>
+                    <p><a asp-controller="Home" asp-action="EndingSoon" asp-route-category="ending" class="text-white text-decoration-none">Phiên sắp kết thúc</a></p>
+                    <p><a asp-controller="Home" asp-action="ZeroPrice" asp-route-category="zero" class="text-white text-decoration-none">Đấu giá từ 0đ</a></p>
                 </div>
 
                 <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mt-3">
@@ -337,6 +343,67 @@
                     if(bellBadge) bellBadge.classList.add('d-none');
                 });
             }
+
+            const themeCheck = document.getElementById('themeCheck');
+            const applyBtn = document.getElementById('applyThemeBtn');
+            const htmlElement = document.documentElement;
+
+        // 1. Khởi tạo trạng thái ban đầu
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            htmlElement.setAttribute('data-bs-theme', savedTheme);
+            themeCheck.checked = (savedTheme === 'dark');
+
+            // 2. Khi nhấn nút Áp dụng
+            applyBtn.addEventListener('click', function () {
+                const newTheme = themeCheck.checked ? 'dark' : 'light';
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+
+                // Thêm một chút hiệu ứng cho chuyên nghiệp
+                applyBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu...';
+                setTimeout(() => {
+                    applyBtn.innerHTML = 'Áp dụng';
+                    alert('Đã đổi giao diện thành công rồi anh xã nhé!');
+                }, 500);
+
+                // 1. HỆ THỐNG GHI NHỚ GIAO DIỆN (DARK/LIGHT) TOÀN TRANG
+            const htmlElement = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            htmlElement.setAttribute('data-bs-theme', savedTheme);
+
+            // (Nếu anh ở trang MyAccount thì tự gạt cái nút cho khớp)
+            const themeCheck = document.getElementById('themePageCheck');
+            if (themeCheck) {
+                themeCheck.checked = (savedTheme === 'dark');
+            }
+
+            // 2. HỆ THỐNG ĐỒNG HỒ ĐẾM NGƯỢC CHO TẤT CẢ SẢN PHẨM Ở MỌI TRANG
+            const timers = document.querySelectorAll('.countdown-timer');
+            if (timers.length > 0) {
+                setInterval(function () {
+                    const now = new Date().getTime();
+
+                    timers.forEach(timer => {
+                        // Lấy thời gian kết thúc mà mình đã giấu trong thẻ HTML
+                        const endTimeStr = timer.getAttribute('data-endtime');
+                        if (!endTimeStr) return;
+
+                        const endTime = new Date(endTimeStr).getTime();
+                        const distance = endTime - now;
+
+                        if (distance <= 0) {
+                            timer.innerHTML = '<i class="bi bi-x-circle me-1"></i>Đã kết thúc';
+                            timer.classList.replace('bg-danger', 'bg-secondary');
+                        } else {
+                            // Tính toán giờ, phút, giây
+                            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                            timer.innerHTML = `<i class="bi bi-clock-history me-1"></i>${hours}h ${minutes}p ${seconds}s`;
+                        }
+                    });
+                }, 1000);
     });
     </script>
 </body>

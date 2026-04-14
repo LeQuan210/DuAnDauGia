@@ -1,0 +1,28 @@
+﻿@model IEnumerable<WebDauGiaDomain.Entities.Product>
+
+@{
+    ViewData["Title"] = "Lịch sử đã xem";
+}
+
+<div class="container my-5">
+    <h4 class="fw-bold mb-4 border-bottom pb-2">
+        <i class="bi bi-clock-history me-2 text-primary"></i>Sản phẩm anh đã xem gần đây
+    </h4>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-eye-slash" style="font-size: 3rem;"></i>
+            <p class="mt-3 fs-5">Anh chưa dạo xem món đồ nào cả.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var item in Model)
+            {
+                <partial name="~/Views/Home/_ProductCard.cshtml" model="item" />
+            }
+        </div>
+    }
+</div>

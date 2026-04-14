@@ -79,9 +79,16 @@ namespace WebDauGiaUI.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+
+        [Authorize] // Chỉ cho phép người đã đăng nhập mới được xem trang này
+        [HttpGet]
         public IActionResult MyAccount()
         {
-            return View();
+            var userIdString = User.FindFirst("UserId")?.Value;
+            if (userIdString == null) return RedirectToAction("Login");
+
+            var user = _context.Users.Find(int.Parse(userIdString));
+            return View(user);
         }
         public IActionResult Profile()
         {
@@ -454,6 +461,57 @@ namespace WebDauGiaUI.Controllers
             }
 
             return Json(new { success = true });
+        }
+
+        // 1. Hàm lưu ảnh đại diện
+        [HttpPost]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatarFile)
+        {
+            if (avatarFile != null && avatarFile.Length > 0)
+            {
+                var userId = int.Parse(User.FindFirst("UserId").Value);
+                // Lưu file vào thư mục wwwroot/picture/
+                var fileName = "avatar_" + userId + Path.GetExtension(avatarFile.FileName);
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/picture", fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await avatarFile.CopyToAsync(stream);
+                }
+
+                // Cập nhật đường dẫn vào CSDL
+                var user = await _context.Users.FindAsync(userId);
+                user.AvatarUrl = "/picture/" + fileName;
+                _context.Update(user);
+                await _context.SaveChangesAsync();
+
+                // --- ĐOẠN MỚI: CẤP LẠI COOKIE ĐỂ CẬP NHẬT ẢNH TRÊN NAVBAR TRỰC TIẾP ---
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim("UserId", user.UserID.ToString()),
+                    new Claim(ClaimTypes.Role, user.Role),
+                    new Claim("AvatarUrl", user.AvatarUrl) // Cập nhật ảnh mới vào đây
+                };
+
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+            }
+            return RedirectToAction("MyAccount");
+        }
+
+        // 2. Hàm xem lịch sử (Lấy dữ liệu từ Cookie hoặc Session)
+        [HttpGet]
+        public IActionResult ViewHistory()
+        {
+            var historyIds = Request.Cookies["ProductHistory"]?.Split(',').Select(int.Parse).ToList() ?? new List<int>();
+
+            var products = _context.Products
+                .Where(p => historyIds.Contains(p.Id))
+                .ToList();
+
+            return View(products);
         }
     }
 }

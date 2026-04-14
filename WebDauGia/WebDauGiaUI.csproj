@@ -25,4 +25,10 @@
     <Folder Include="wwwroot\uploads\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\Picture\Banner1.jpg" />
+    <None Include="wwwroot\Picture\Banner2.jpg" />
+    <None Include="wwwroot\Picture\Banner3.jpg" />
+  </ItemGroup>
+
 </Project>

@@ -50,11 +50,20 @@ namespace WebDauGiaUI.Controllers
             return View();
         }
 
+        [HttpGet]
         // Hàm mở trang Phòng Đấu Giá (Chi tiết sản phẩm)
-        public IActionResult Detail(bool isSeller = false)
+        public IActionResult Detail(int Id, bool isSeller = false)
         {
-            ViewBag.IsSeller = isSeller; // Truyền thông tin người bán cho View
-            return View();
+            var product = _context.Products.Find(Id);
+
+            // Nếu có người cố tình gõ ID bậy bạ không có thật thì báo lỗi
+            if (product == null)
+            {
+                return NotFound("Không tìm thấy sản phẩm này anh nhé!");
+            }
+
+            // Đẩy dữ liệu thật ra ngoài giao diện
+            return View(product);
         }
 
         // 1. Hàm xử lý ô Tìm kiếm theo tên
@@ -98,5 +107,35 @@ namespace WebDauGiaUI.Controllers
             return View(products);
         }
 
+        // 1. Phễu lọc: Phiên sắp kết thúc (Dưới 1 tiếng)
+        [HttpGet]
+        public IActionResult EndingSoon()
+        {
+            var now = DateTime.Now;
+            var oneHourLater = now.AddHours(1);
+
+            // Lọc ra những sản phẩm có thời gian kết thúc lớn hơn hiện tại và nhỏ hơn 1 tiếng nữa
+            var products = _context.Products
+                .Where(p => p.AuctionEndTime > now && p.AuctionEndTime <= oneHourLater)
+                .ToList();
+
+            // Gắn tên danh mục và tái sử dụng lại file giao diện Explore.cshtml
+            ViewBag.CategoryName = "Phiên sắp kết thúc (< 1 tiếng)";
+            return View("Explore", products);
+        }
+
+        // 2. Phễu lọc: Đấu giá từ 0đ
+        [HttpGet]
+        public IActionResult ZeroPrice()
+        {
+            // Lọc ra những sản phẩm có giá khởi điểm đúng bằng 0
+            var products = _context.Products
+                .Where(p => p.StartPrice == 0)
+                .ToList();
+
+            // Gắn tên danh mục và tái sử dụng lại file giao diện Explore.cshtml
+            ViewBag.CategoryName = "Đấu giá từ 0đ";
+            return View("Explore", products);
+        }
     }
 }

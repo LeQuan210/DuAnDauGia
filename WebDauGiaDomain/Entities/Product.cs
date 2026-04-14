@@ -15,5 +15,7 @@ namespace WebDauGiaDomain.Entities
         public int CategoryId { get; set; } // Để phân loại: 1-Điện tử, 2-Mô hình...
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime AuctionEndTime { get; set; }
+        public bool IsClosed { get; set; } = false; // Cột này để đánh dấu phiên đấu giá đã đóng hay chưa
+        public decimal CurrentPrice { get; set; } // Giá hiện tại của sản phẩm, sẽ được cập nhật sau mỗi lần đấu giá
     }
 }

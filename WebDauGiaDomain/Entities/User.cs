@@ -14,5 +14,6 @@ namespace WebDauGiaDomain.Entities
         public int TrustScore { get; set; } = 100;
         public decimal WalletBalance { get; set; } = 0;
         public bool IsLocked { get; set; } = false;
+        public string AvatarUrl { get; set; } = string.Empty;
     }
 }

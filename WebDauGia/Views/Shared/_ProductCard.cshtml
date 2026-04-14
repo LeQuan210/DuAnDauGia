@@ -2,11 +2,11 @@
 
 <div class="col">
     <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden position-relative product-card" data-product-id="@Model.Id" data-end-time="@Model.AuctionEndTime.ToString("yyyy-MM-ddTHH:mm:ss")">
-        <a asp-action="Detail" asp-route-id="@Model.Id" class="d-block position-relative">
+        <a asp-controller="Home" asp-action="Detail" asp-route-id="@Model.Id" class="d-block position-relative">
             <img src="@Model.ImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;">
-            <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-75 text-white p-2 w-100 d-flex align-items-center justify-content-center fw-bold small timer-container">
-                <i class="bi bi-hourglass-split me-2"></i>
-                <span class="product-timer">Đang tính...</span>
+            <div class="position-absolute top-0 end-0 m-2 badge bg-danger countdown-timer"
+                 data-endtime="@Model.AuctionEndTime.ToString("yyyy-MM-ddTHH:mm:ss")">
+                Đang tải...
             </div>
         </a>
 
@@ -15,7 +15,7 @@
             <p class="text-danger fw-bold mb-3">@Model.StartPrice.ToString("N0") đ</p>
 
             <div class="d-flex align-items-center justify-content-between">
-                <a asp-action="Detail" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <a asp-controller="Home" asp-action="Detail" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm rounded-pill px-3">
                     Tham gia đấu giá
                 </a>
                 <i class="bi bi-heart fs-5 text-secondary favorite-btn" style="cursor: pointer;" title="Thêm vào yêu thích"></i>
