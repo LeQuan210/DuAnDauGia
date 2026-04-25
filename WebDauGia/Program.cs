@@ -1,11 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using WebDauGiaInfrasData;
-using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Đăng ký bảo vệ đo thời gian cho toàn bộ hệ thống
+    options.Filters.Add<WebDauGiaUI.Controllers.PerformanceFilter>();
+});
 
 builder.Services.AddSignalR();
 

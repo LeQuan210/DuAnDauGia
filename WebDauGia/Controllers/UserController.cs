@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+﻿ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +12,7 @@ using MailKit.Net.Smtp;
 using MimeKit;
 using System.Net.Http;
 using Microsoft.AspNetCore.Authorization;
+using System.Diagnostics;
 
 namespace WebDauGiaUI.Controllers
 {
@@ -20,37 +21,37 @@ namespace WebDauGiaUI.Controllers
         private readonly IUserRepository _userRepository;
         private readonly AuctionDbContext _context;
 
-        public UserController(AuctionDbContext context, IUserRepository userRepository  )     
+        public UserController(AuctionDbContext context, IUserRepository userRepository)
         {
             _context = context;
-                _userRepository = userRepository;
+            _userRepository = userRepository;
         }
 
         // Tiêm (Inject) IUserRepository vào thông qua Constructor
-            
+
 
         public async Task<IActionResult> Index()
         {
-            // Lấy toàn bộ danh sách user từ cơ sở dữ liệu
-            var users = await _userRepository.GetAllUsersAsync();
+            // Lấy toàn bộ danh sách user từ cơ sở dữ liệu
+            var users = await _userRepository.GetAllUsersAsync();
 
-            // Đưa dữ liệu sang View để hiển thị
-            return View(users);
+            // Đưa dữ liệu sang View để hiển thị
+            return View(users);
         }
         [Authorize] // Chỉ cho phép người đã đăng nhập mới được tạo đấu giá
-        [HttpGet]
+        [HttpGet]
         public IActionResult CreateAuction()
         {
             return View();
         }
 
-        
+
         [HttpPost]
         public async Task<IActionResult> CreateAuction(string ProductName, int CategoryId, decimal StartPrice, string Description, IFormFile ImageFile)
         {
             string imagePath = "/images/no-image.png"; // Ảnh mặc định nếu anh không tải ảnh
 
-            if (ImageFile != null)
+            if (ImageFile != null)
             {
                 var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
                 var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
@@ -62,8 +63,8 @@ namespace WebDauGiaUI.Controllers
                 imagePath = "/uploads/" + fileName;
             }
 
-            // TẠO ĐỐI TƯỢNG VÀ LƯU VÀO DATABASE
-            var product = new Product
+            // TẠO ĐỐI TƯỢNG VÀ LƯU VÀO DATABASE
+            var product = new Product
             {
                 Name = ProductName,
                 CategoryId = CategoryId,
@@ -72,16 +73,16 @@ namespace WebDauGiaUI.Controllers
                 ImageUrl = imagePath,
                 CreatedAt = DateTime.Now,
                 AuctionEndTime = DateTime.Now.AddHours(4) // Mặc định đấu giá kết thúc sau 4 giờ, anh có thể chỉnh lại sau
-            };
+            };
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync(); // Lệnh này là quan trọng nhất để dữ liệu xuất hiện trong SSMS
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Home");
         }
 
         [Authorize] // Chỉ cho phép người đã đăng nhập mới được xem trang này
-        [HttpGet]
+        [HttpGet]
         public IActionResult MyAccount()
         {
             var userIdString = User.FindFirst("UserId")?.Value;
@@ -92,19 +93,19 @@ namespace WebDauGiaUI.Controllers
         }
         public IActionResult Profile()
         {
-            // Tạm thời em trả về View trống để anh dựng UI chụp ảnh nộp bài trước.
-            // Sau này làm database cho đấu giá xong mình sẽ truyền dữ liệu thật vào đây.
-            return View();
+            // Tạm thời em trả về View trống để anh dựng UI chụp ảnh nộp bài trước.
+            // Sau này làm database cho đấu giá xong mình sẽ truyền dữ liệu thật vào đây.
+            return View();
         }
 
-        // Trang Quản lý Đấu giá của tôi
-        public IActionResult MyAuctions()
+        // Trang Quản lý Đấu giá của tôi
+        public IActionResult MyAuctions()
         {
             return View();
         }
-        public IActionResult ForgotPassword() 
-        { 
-            return View(); 
+        public IActionResult ForgotPassword()
+        {
+            return View();
         }
         [HttpGet]
         public IActionResult Login()
@@ -112,10 +113,10 @@ namespace WebDauGiaUI.Controllers
             return View();
         }
 
-        // Xử lý khi bấm nút Đăng nhập
-        [HttpPost]
+        // Xử lý khi bấm nút Đăng nhập
+        [HttpPost]
         public async Task<IActionResult> Login(string username, string password) // THÊM PASSWORD VÀO ĐÂY
-        {
+        {
 
             var captchaResponse = Request.Form["g-recaptcha-response"];
             if (string.IsNullOrEmpty(captchaResponse))
@@ -137,8 +138,8 @@ namespace WebDauGiaUI.Controllers
                 }
             }
 
-            // Tìm user trong Database
-            var user = await _userRepository.GetUserByUsernameAsync(username);
+            // Tìm user trong Database
+            var user = await _userRepository.GetUserByUsernameAsync(username);
 
             if (user.IsLocked)
             {
@@ -146,21 +147,21 @@ namespace WebDauGiaUI.Controllers
                 return View();
             }
 
-            // KIỂM TRA THÊM MẬT KHẨU
-            if (user != null && user.PasswordHash == password)
+            // KIỂM TRA THÊM MẬT KHẨU
+            if (user != null && user.PasswordHash == password)
             {
                 var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, user.Role),
-                    new Claim("UserId", user.UserID.ToString())
-                };
+        {
+          new Claim(ClaimTypes.Name, user.Username),
+          new Claim(ClaimTypes.Role, user.Role),
+          new Claim("UserId", user.UserID.ToString())
+        };
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
                 await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity));
+                  CookieAuthenticationDefaults.AuthenticationScheme,
+                  new ClaimsPrincipal(claimsIdentity));
 
                 HttpContext.Session.SetString("Username", user.Username);
                 return RedirectToAction("Index", "Home");
@@ -170,27 +171,27 @@ namespace WebDauGiaUI.Controllers
             return View();
 
         }
-        // Xử lý Đăng xuất
-        public async Task<IActionResult> Logout()
+        // Xử lý Đăng xuất
+        public async Task<IActionResult> Logout()
         {
-            // Xóa Cookie
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            // Xóa Cookie
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
 
-        // Hiển thị form đăng ký
-        [HttpGet]
+        // Hiển thị form đăng ký
+        [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
 
-        // Xử lý khi người dùng bấm nút Đăng ký
-        [HttpPost]
+        // Xử lý khi người dùng bấm nút Đăng ký
+        [HttpPost]
         public async Task<IActionResult> Register(WebDauGiaDomain.Entities.User user)
         {
-            // Kiểm tra xem tên đăng nhập đã có ai dùng chưa
-            var existingUser = await _userRepository.GetUserByUsernameAsync(user.Username);
+            // Kiểm tra xem tên đăng nhập đã có ai dùng chưa
+            var existingUser = await _userRepository.GetUserByUsernameAsync(user.Username);
             if (existingUser != null)
             {
                 ViewBag.Error = "Tên đăng nhập này đã có người sử dụng rồi anh nhé. Hãy chọn tên khác.";
@@ -199,81 +200,81 @@ namespace WebDauGiaUI.Controllers
 
             if (ModelState.IsValid)
             {
-                // Tự động gán các quyền và chỉ số mặc định cho người mới
-                user.Role = "Bidder";
+                // Tự động gán các quyền và chỉ số mặc định cho người mới
+                user.Role = "Bidder";
                 user.TrustScore = 100;
                 user.WalletBalance = 0;
 
                 await _userRepository.AddUserAsync(user);
 
-                // Đăng ký thành công thì em cho chuyển thẳng sang trang Đăng nhập
-                return RedirectToAction("Login");
+                // Đăng ký thành công thì em cho chuyển thẳng sang trang Đăng nhập
+                return RedirectToAction("Login");
             }
             return View(user);
         }
 
-        // Hàm phụ: Dùng MailKit để gửi thư qua máy chủ Gmail
-        private void SendOtpEmail(string toEmail, string otpCode)
+        // Hàm phụ: Dùng MailKit để gửi thư qua máy chủ Gmail
+        private void SendOtpEmail(string toEmail, string otpCode)
         {
             var message = new MimeMessage();
-            // Anh thay email của anh vào chỗ này nhé
-            message.From.Add(new MailboxAddress("AuctionHub Security", "lequan0971662799@gmail.com"));
+            // Anh thay email của anh vào chỗ này nhé
+            message.From.Add(new MailboxAddress("AuctionHub Security", "lequan0971662799@gmail.com"));
             message.To.Add(new MailboxAddress("Người dùng", toEmail));
             message.Subject = "Mã xác thực OTP - AuctionHub";
 
             message.Body = new TextPart("html")
             {
                 Text = $@"
-                    <div style='font-family: Arial, sans-serif; padding: 20px;'>
-                        <h2 style='color: #0d6efd;'>Khôi phục mật khẩu</h2>
-                        <p>Mã xác thực (OTP) của bạn là:</p>
-                        <h1 style='color: #dc3545; letter-spacing: 5px;'>{otpCode}</h1>
-                        <p>Mã này sẽ hết hạn sau 5 phút. Vui lòng không chia sẻ cho người khác.</p>
-                    </div>"
+                    <div style='font-family: Arial, sans-serif; padding: 20px;'>
+                        <h2 style='color: #0d6efd;'>Khôi phục mật khẩu</h2>
+                        <p>Mã xác thực (OTP) của bạn là:</p>
+                        <h1 style='color: #dc3545; letter-spacing: 5px;'>{otpCode}</h1>
+                        <p>Mã này sẽ hết hạn sau 5 phút. Vui lòng không chia sẻ cho người khác.</p>
+                    </div>"
             };
 
             using (var client = new SmtpClient())
             {
-                // Kết nối tới máy chủ Gmail
-                client.Connect("smtp.gmail.com", 587, false);
+                // Kết nối tới máy chủ Gmail
+                client.Connect("smtp.gmail.com", 587, false);
 
-                // Anh thay Email và cái Mật khẩu ứng dụng 16 ký tự (ở Bước 1) vào đây:
-                client.Authenticate("lequan0971662799@gmail.com", "pgcm njbt chvt wnhf");
+                // Anh thay Email và cái Mật khẩu ứng dụng 16 ký tự (ở Bước 1) vào đây:
+                client.Authenticate("lequan0971662799@gmail.com", "pgcm njbt chvt wnhf");
 
                 client.Send(message);
                 client.Disconnect(true);
             }
         }
 
-        // Hàm chính: Xử lý khi nhấn nút "Gửi mã" trên giao diện
-        [HttpPost]
+        // Hàm chính: Xử lý khi nhấn nút "Gửi mã" trên giao diện
+        [HttpPost]
         public IActionResult SendOtp(string email)
         {
             if (string.IsNullOrEmpty(email)) return BadRequest("Vui lòng nhập email.");
 
-            // 1. Tạo ngẫu nhiên mã OTP 6 chữ số
-            Random rnd = new Random();
+            // 1. Tạo ngẫu nhiên mã OTP 6 chữ số
+            Random rnd = new Random();
             string otp = rnd.Next(100000, 999999).ToString();
 
-            // 2. Lưu OTP và Email vào bộ nhớ ngắn hạn (Session)
-            HttpContext.Session.SetString("SavedOTP", otp);
+            // 2. Lưu OTP và Email vào bộ nhớ ngắn hạn (Session)
+            HttpContext.Session.SetString("SavedOTP", otp);
             HttpContext.Session.SetString("ResetEmail", email);
 
-            // 3. Gửi email đi
-            SendOtpEmail(email, otp);
+            // 3. Gửi email đi
+            SendOtpEmail(email, otp);
 
-            // 4. Trả về thông báo thành công cho giao diện
-            return Json(new { success = true, message = "Đã gửi mã OTP thành công! Vui lòng kiểm tra hộp thư." });
+            // 4. Trả về thông báo thành công cho giao diện
+            return Json(new { success = true, message = "Đã gửi mã OTP thành công! Vui lòng kiểm tra hộp thư." });
         }
 
         [HttpPost]
         public IActionResult VerifyOtp(string otpCode)
         {
-            // 1. Lấy mã OTP gốc đã lưu trong bộ nhớ tạm ra
-            string savedOtp = HttpContext.Session.GetString("SavedOTP");
+            // 1. Lấy mã OTP gốc đã lưu trong bộ nhớ tạm ra
+            string savedOtp = HttpContext.Session.GetString("SavedOTP");
 
-            // 2. So sánh
-            if (string.IsNullOrEmpty(savedOtp))
+            // 2. So sánh
+            if (string.IsNullOrEmpty(savedOtp))
             {
                 TempData["Error"] = "Mã OTP đã hết hạn hoặc bạn chưa yêu cầu gửi mã.";
                 return RedirectToAction("ForgotPassword");
@@ -281,32 +282,32 @@ namespace WebDauGiaUI.Controllers
 
             if (otpCode == savedOtp)
             {
-                // Nếu đúng mã, cho phép đi tiếp sang trang đặt lại mật khẩu
-                return RedirectToAction("ResetPassword");
+                // Nếu đúng mã, cho phép đi tiếp sang trang đặt lại mật khẩu
+                return RedirectToAction("ResetPassword");
             }
             else
             {
-                // Nếu sai mã, đuổi về trang cũ và báo lỗi
-                TempData["Error"] = "Mã xác thực không chính xác. Anh kiểm tra lại email nhé!";
+                // Nếu sai mã, đuổi về trang cũ và báo lỗi
+                TempData["Error"] = "Mã xác thực không chính xác. Anh kiểm tra lại email nhé!";
                 return RedirectToAction("ForgotPassword");
             }
         }
 
-        // 1. Hàm hiển thị trang nhập mật khẩu mới
-        [HttpGet]
+        // 1. Hàm hiển thị trang nhập mật khẩu mới
+        [HttpGet]
         public IActionResult ResetPassword()
         {
-            // Phải có email trong bộ nhớ tạm (tức là đã qua bước OTP) thì mới cho vào trang này
-            var email = HttpContext.Session.GetString("ResetEmail");
+            // Phải có email trong bộ nhớ tạm (tức là đã qua bước OTP) thì mới cho vào trang này
+            var email = HttpContext.Session.GetString("ResetEmail");
             if (string.IsNullOrEmpty(email))
             {
                 return RedirectToAction("ForgotPassword");
             }
             return View(); // Anh nhớ tạo thêm file ResetPassword.cshtml trong thư mục Views/User nhé
-        }
+        }
 
-        // 2. Hàm xử lý lưu mật khẩu mới xuống Database
-        [HttpPost]
+        // 2. Hàm xử lý lưu mật khẩu mới xuống Database
+        [HttpPost]
         public async Task<IActionResult> ResetPassword(string newPassword, string confirmPassword)
         {
             var email = HttpContext.Session.GetString("ResetEmail");
@@ -318,20 +319,20 @@ namespace WebDauGiaUI.Controllers
                 return View();
             }
 
-            // Tìm tài khoản trong Database dựa vào Email
-            var user = _context.Users.FirstOrDefault(u => u.Email == email);
+            // Tìm tài khoản trong Database dựa vào Email
+            var user = _context.Users.FirstOrDefault(u => u.Email == email);
             if (user != null)
             {
                 user.PasswordHash = newPassword; // Gán mật khẩu mới
-                _context.Users.Update(user); // Cập nhật
-                await _context.SaveChangesAsync(); // Lưu xuống DB
+                _context.Users.Update(user); // Cập nhật
+                await _context.SaveChangesAsync(); // Lưu xuống DB
 
-                // Dọn dẹp trí nhớ của hệ thống
-                HttpContext.Session.Remove("ResetEmail");
+                // Dọn dẹp trí nhớ của hệ thống
+                HttpContext.Session.Remove("ResetEmail");
                 HttpContext.Session.Remove("SavedOTP");
 
-                // Đổi thành công thì đuổi về trang Đăng nhập
-                TempData["Success"] = "Đổi mật khẩu thành công! Mời anh đăng nhập lại.";
+                // Đổi thành công thì đuổi về trang Đăng nhập
+                TempData["Success"] = "Đổi mật khẩu thành công! Mời anh đăng nhập lại.";
                 return RedirectToAction("Login");
             }
 
@@ -339,79 +340,79 @@ namespace WebDauGiaUI.Controllers
             return View();
         }
         [Authorize] // Chỉ cho phép người đã đăng nhập mới được yêu thích sản phẩm
-        [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> ToggleFavorite(int productId)
         {
-            // 1. Kiểm tra xem người dùng đã đăng nhập chưa
-            var userIdString = User.FindFirst("UserId")?.Value;
+            // 1. Kiểm tra xem người dùng đã đăng nhập chưa
+            var userIdString = User.FindFirst("UserId")?.Value;
             if (userIdString == null) return Json(new { success = false, message = "Vui lòng đăng nhập anh nhé." });
             var userId = int.Parse(userIdString);
 
-            // 2. Kiểm tra sản phẩm có tồn tại không
-            var product = _context.Products.Find(productId);
+            // 2. Kiểm tra sản phẩm có tồn tại không
+            var product = _context.Products.Find(productId);
             if (product == null) return Json(new { success = false, message = "Sản phẩm không tồn tại." });
 
-            // 3. Tra cứu xem đã yêu thích chưa
-            var favorite = _context.FavoriteProducts.FirstOrDefault(fp => fp.UserId == userId && fp.ProductId == productId);
+            // 3. Tra cứu xem đã yêu thích chưa
+            var favorite = _context.FavoriteProducts.FirstOrDefault(fp => fp.UserId == userId && fp.ProductId == productId);
 
             if (favorite == null)
             {
-                // Chưa có thì thêm mới
-                var newFavorite = new FavoriteProduct { UserId = userId, ProductId = productId };
+                // Chưa có thì thêm mới
+                var newFavorite = new FavoriteProduct { UserId = userId, ProductId = productId };
                 _context.FavoriteProducts.Add(newFavorite);
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, isFavorited = true, message = "Đã thêm vào yêu thích." });
             }
             else
             {
-                // Có rồi thì xóa đi (hủy yêu thích)
-                _context.FavoriteProducts.Remove(favorite);
+                // Có rồi thì xóa đi (hủy yêu thích)
+                _context.FavoriteProducts.Remove(favorite);
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, isFavorited = false, message = "Đã xóa khỏi yêu thích." });
             }
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> FavoriteProducts()
         {
-            // 1. Kiểm tra xem anh đã đăng nhập chưa
-            var userIdString = User.FindFirst("UserId")?.Value;
+            // 1. Kiểm tra xem anh đã đăng nhập chưa
+            var userIdString = User.FindFirst("UserId")?.Value;
             if (userIdString == null)
             {
                 return RedirectToAction("Login");
             }
             var userId = int.Parse(userIdString);
 
-            // 2. Tìm danh sách ID những sản phẩm anh đã thích
-            var favoriteIds = _context.FavoriteProducts
-                .Where(fp => fp.UserId == userId)
-                .Select(fp => fp.ProductId)
-                .ToList();
+            // 2. Tìm danh sách ID những sản phẩm anh đã thích
+            var favoriteIds = _context.FavoriteProducts
+        .Where(fp => fp.UserId == userId)
+        .Select(fp => fp.ProductId)
+        .ToList();
 
-            // 3. Lấy thông tin chi tiết của những sản phẩm đó
-            var favoriteProducts = _context.Products
-                .Where(p => favoriteIds.Contains(p.Id))
-                .ToList();
+            // 3. Lấy thông tin chi tiết của những sản phẩm đó
+            var favoriteProducts = _context.Products
+        .Where(p => favoriteIds.Contains(p.Id))
+        .ToList();
 
-            // 4. Trả về View cùng với danh sách sản phẩm
-            return View(favoriteProducts);
+            // 4. Trả về View cùng với danh sách sản phẩm
+            return View(favoriteProducts);
         }
 
-        // 1. Giao diện trang Nạp Tiền
-        [Authorize] // Chỉ cho phép người đã đăng nhập mới được nạp tiền
-        [HttpGet]
+        // 1. Giao diện trang Nạp Tiền
+        [Authorize] // Chỉ cho phép người đã đăng nhập mới được nạp tiền
+        [HttpGet]
         public IActionResult Deposit()
         {
             var userIdString = User.FindFirst("UserId")?.Value;
             if (userIdString == null) return RedirectToAction("Login");
 
-            // Lấy thông tin người dùng lên để xem số dư hiện tại
-            var user = _context.Users.Find(int.Parse(userIdString));
+            // Lấy thông tin người dùng lên để xem số dư hiện tại
+            var user = _context.Users.Find(int.Parse(userIdString));
             return View(user);
         }
 
-        // 2. Xử lý cộng tiền vào Database khi bấm Nạp
-        [HttpPost]
+        // 2. Xử lý cộng tiền vào Database khi bấm Nạp
+        [HttpPost]
         public async Task<IActionResult> Deposit(decimal amount)
         {
             var userIdString = User.FindFirst("UserId")?.Value;
@@ -425,7 +426,7 @@ namespace WebDauGiaUI.Controllers
 
             var user = _context.Users.Find(int.Parse(userIdString));
             user.WalletBalance += amount; // Cộng tiền vào ví
-            _context.Users.Update(user);
+            _context.Users.Update(user);
             var log = new SystemLog
             {
                 UserId = user.UserID,
@@ -440,38 +441,41 @@ namespace WebDauGiaUI.Controllers
             return RedirectToAction("Deposit");
         }
 
-        // 3. Hàm API ngầm để kiểm tra ví trước khi cho phép Đặt giá
-        [HttpPost]
+        // 3. Hàm API ngầm để kiểm tra ví trước khi cho phép Đặt giá
+        [HttpPost]
         public IActionResult ValidateBidBalance(decimal bidAmount)
         {
-            var userIdString = User.FindFirst("UserId")?.Value;
-           if (!User.Identity.IsAuthenticated)
-    {
-        // Trả về một mã riêng để JS biết đường đuổi đi đăng nhập
-        return Json(new { success = false, needsLogin = true, message = "Anh chưa đăng nhập rồi!" });
-    }
+            Stopwatch sw = Stopwatch.StartNew(); // Bắt đầu đo thời gian
+            var userIdString = User.FindFirst("UserId")?.Value;
+            if (!User.Identity.IsAuthenticated)
+            {
+                // Trả về một mã riêng để JS biết đường đuổi đi đăng nhập
+                return Json(new { success = false, needsLogin = true, message = "Anh chưa đăng nhập rồi!" });
+            }
 
             var user = _context.Users.Find(int.Parse(userIdString));
 
-            // Luật đấu giá: Số dư trong ví phải lớn hơn hoặc bằng số tiền định đặt
-            // (Thực tế người ta hay thu cọc 10%, nhưng mình cứ làm chặt chẽ thế này trước nhé)
-            if (user.WalletBalance < bidAmount)
+            // Luật đấu giá: Số dư trong ví phải lớn hơn hoặc bằng số tiền định đặt
+            // (Thực tế người ta hay thu cọc 10%, nhưng mình cứ làm chặt chẽ thế này trước nhé)
+            if (user.WalletBalance < bidAmount)
             {
                 return Json(new { success = false, message = "Số dư trong ví không đủ. Anh vui lòng nạp thêm tiền nhé!" });
             }
 
-            return Json(new { success = true });
+            sw.Stop(); // Dừng đồng hồ
+            
+            return Json(new { success = true, executionTime = sw.ElapsedMilliseconds });
         }
 
-        // 1. Hàm lưu ảnh đại diện
-        [HttpPost]
+        // 1. Hàm lưu ảnh đại diện
+        [HttpPost]
         public async Task<IActionResult> UploadAvatar(IFormFile avatarFile)
         {
             if (avatarFile != null && avatarFile.Length > 0)
             {
                 var userId = int.Parse(User.FindFirst("UserId").Value);
-                // Lưu file vào thư mục wwwroot/picture/
-                var fileName = "avatar_" + userId + Path.GetExtension(avatarFile.FileName);
+                // Lưu file vào thư mục wwwroot/picture/
+                var fileName = "avatar_" + userId + Path.GetExtension(avatarFile.FileName);
                 var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/picture", fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -479,20 +483,20 @@ namespace WebDauGiaUI.Controllers
                     await avatarFile.CopyToAsync(stream);
                 }
 
-                // Cập nhật đường dẫn vào CSDL
-                var user = await _context.Users.FindAsync(userId);
+                // Cập nhật đường dẫn vào CSDL
+                var user = await _context.Users.FindAsync(userId);
                 user.AvatarUrl = "/picture/" + fileName;
                 _context.Update(user);
                 await _context.SaveChangesAsync();
 
-                // --- ĐOẠN MỚI: CẤP LẠI COOKIE ĐỂ CẬP NHẬT ẢNH TRÊN NAVBAR TRỰC TIẾP ---
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.Username),
-                    new Claim("UserId", user.UserID.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role),
-                    new Claim("AvatarUrl", user.AvatarUrl) // Cập nhật ảnh mới vào đây
-                };
+                // --- ĐOẠN MỚI: CẤP LẠI COOKIE ĐỂ CẬP NHẬT ẢNH TRÊN NAVBAR TRỰC TIẾP ---
+                var claims = new List<Claim>
+        {
+          new Claim(ClaimTypes.Name, user.Username),
+          new Claim("UserId", user.UserID.ToString()),
+          new Claim(ClaimTypes.Role, user.Role),
+          new Claim("AvatarUrl", user.AvatarUrl) // Cập nhật ảnh mới vào đây
+                };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var principal = new ClaimsPrincipal(identity);
@@ -501,17 +505,36 @@ namespace WebDauGiaUI.Controllers
             return RedirectToAction("MyAccount");
         }
 
-        // 2. Hàm xem lịch sử (Lấy dữ liệu từ Cookie hoặc Session)
-        [HttpGet]
+        // 2. Hàm xem lịch sử (Lấy dữ liệu từ Cookie hoặc Session)
+        [HttpGet]
         public IActionResult ViewHistory()
         {
             var historyIds = Request.Cookies["ProductHistory"]?.Split(',').Select(int.Parse).ToList() ?? new List<int>();
 
             var products = _context.Products
-                .Where(p => historyIds.Contains(p.Id))
-                .ToList();
+              .Where(p => historyIds.Contains(p.Id))
+              .ToList();
 
             return View(products);
+        }
+
+        [HttpGet]
+        public IActionResult ListUser()
+        {
+            // 1. Lấy đồng hồ ra và BẮT ĐẦU bấm giờ
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            // 2. Thực hiện tác vụ chính (Chạy xuyên qua các tầng để lấy dữ liệu)
+            var users = _context.Users.ToList();
+
+            // 3. Xong việc thì DỪNG đồng hồ lại
+            stopwatch.Stop();
+
+            // 4. Gói thời gian đo được (tính bằng mili-giây) vào ViewBag để gửi ra màn hình
+            ViewBag.ExecutionTime = stopwatch.ElapsedMilliseconds;
+
+            return View(users);
         }
     }
 }

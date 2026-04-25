@@ -75,7 +75,7 @@
 
                                 <li><a class="dropdown-item py-2 fw-bold text-primary" asp-controller="User" asp-action="MyAccount"><i class="bi bi-gear me-1"></i> Thiết lập tài khoản</a></li>
 
-                                <li><a class="dropdown-item py-2 fw-bold text-success" asp-controller="Home" asp-action="Detail"><i class="bi bi-plus-circle me-1"></i> Tạo/Xem phiên đấu giá</a></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-success" asp-controller="User" asp-action="CreateAuction"><i class="bi bi-plus-circle me-2"></i> Tạo phiên đấu giá</a></li>
 
                                 @if (User.IsInRole("Admin"))
                                 {
@@ -146,7 +146,16 @@
             </div>
         </div>
     </header>
-    <div class="container">
+
+    <div class="container mt-3">
+        @if (ViewBag.GlobalPageLoadTime != null)
+        {
+            <div class="bg-dark text-white text-end py-1 px-3" style="font-size: 0.85rem; border-bottom: 2px solid #0d6efd;">
+                <i class="bi bi-speedometer2 me-1 text-info"></i>
+                Kiểm thử Kiến trúc: Thời gian phản hồi tầng WebUI
+                <strong class="text-warning ms-1">@ViewBag.GlobalPageLoadTime ms</strong>
+            </div>
+        }
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
@@ -214,197 +223,41 @@
     @await RenderSectionAsync("Scripts", required: false)
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- 1. XỬ LÝ ĐỒNG HỒ ĐẾM NGƯỢC ---
-            const timerSpans = document.querySelectorAll('.product-timer');
+        // Giao việc cho hệ thống theo CHUẨN BOOTSTRAP 5
+        document.addEventListener('DOMContentLoaded', function () {
+            const themeToggle = document.getElementById('themeToggle');
+            if (!themeToggle) return; // Nếu không tìm thấy nút thì bỏ qua cho khỏi lỗi
 
-            timerSpans.forEach(span => {
-                const productCard = span.closest('.product-card');
-                const endTimeStr = productCard.getAttribute('data-end-time');
-                const endTime = new Date(endTimeStr).getTime();
+            const htmlElement = document.documentElement; // Phải nhắm vào thẻ <html> chứ không phải <body>
+            const icon = themeToggle.querySelector('i');
 
-                // Cập nhật đồng hồ mỗi 1 giây
-                const countdownInterval = setInterval(function() {
-                    const now = new Date().getTime();
-                    const distance = endTime - now;
+            // 1. Kiểm tra xem lần trước anh thoát web đang để màu gì
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme) {
+                // Dùng thuộc tính chính chủ của Bootstrap 5: data-bs-theme
+                htmlElement.setAttribute('data-bs-theme', currentTheme);
+                if (currentTheme === 'dark') {
+                    icon.classList.replace('bi-moon', 'bi-sun');
+                }
+            }
 
-                    if (distance <= 0) {
-                        clearInterval(countdownInterval);
-                        span.innerHTML = "Đã kết thúc";
-                        productCard.querySelector('.timer-container').classList.add('bg-danger');
-                        return;
-                    }
+            // 2. Xử lý khi anh bấm nút cái cạch!
+            themeToggle.addEventListener('click', () => {
+                const isDark = htmlElement.getAttribute('data-bs-theme') === 'dark';
 
-                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                    span.innerHTML = String(hours).padStart(2, '0') + ":" + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-                }, 1000);
-            });
-
-            // --- 2. XỬ LÝ KHI BẤM VÀO TRÁI TIM YÊU THÍCH ---
-            const favoriteButtons = document.querySelectorAll('.favorite-btn');
-
-            favoriteButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const productCard = this.closest('.product-card');
-                const productId = productCard.getAttribute('data-product-id');
-
-                // Gọi xuống Backend UserController để lưu yêu thích
-                fetch('/User/ToggleFavorite', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'productId=' + productId
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.isFavorited) {
-                            // Nếu thành công, đổi màu tim thành đỏ
-                            this.classList.remove('bi-heart', 'text-secondary');
-                            this.classList.add('bi-heart-fill', 'text-danger');
-                            this.title = "Xóa khỏi yêu thích";
-                        } else {
-                            // Nếu hủy yêu thích, đổi lại tim xám
-                            this.classList.remove('bi-heart-fill', 'text-danger');
-                            this.classList.add('bi-heart', 'text-secondary');
-                            this.title = "Thêm vào yêu thích";
-
-                            // ĐOẠN CODE MỚI THÊM: Xóa thẻ sản phẩm nếu đang ở trang Danh sách yêu thích
-                            if (window.location.pathname.includes('FavoriteProducts')) {
-                                productCard.parentElement.remove();
-                            }
-                        }
-                        // Em tạm ẩn dòng alert này đi để bấm thả tim cho mượt nhé
-                        // alert(data.message);
-                    } else {
-                        // Nếu có lỗi từ server (như chưa đăng nhập) thì mới hiện thông báo
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Có lỗi xảy ra, anh kiểm tra lại xem.');
-                });
-            });
-        });
-
-            // --- HỆ THỐNG LẮNG NGHE THÔNG BÁO TOÀN TRANG ---
-            const bellBadge = document.getElementById('bellBadge');
-            const emptyNoti = document.getElementById('emptyNotification');
-            const notiList = document.getElementById('notificationList');
-            const bellIcon = document.getElementById('notificationDropdown');
-
-            // 1. Mở kết nối với đài phát thanh
-            const globalConnection = new signalR.HubConnectionBuilder()
-                .withUrl("/auctionHub")
-                .build();
-
-            // 2. Lắng nghe sự kiện "ReceiveBid"
-            globalConnection.on("ReceiveBid", function (productId, userName, amount) {
-                const currentUser = '@(User.Identity.IsAuthenticated ? User.Identity.Name : "")';
-                
-                // Nếu người vừa đặt giá KHÔNG PHẢI là mình, thì mới báo chuông
-                if (userName !== currentUser && userName !== "") {
-                    
-                    // Bật chấm đỏ
-                    if(bellBadge) bellBadge.classList.remove('d-none');
-                    // Ẩn chữ "Không có thông báo"
-                    if(emptyNoti) emptyNoti.classList.add('d-none');
-
-                    // Tạo một thẻ thông báo mới
-                    const newNoti = document.createElement('div');
-                    newNoti.className = 'p-3 border-bottom bg-white';
-                    newNoti.innerHTML = `
-                        <div class="d-flex align-items-center">
-                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3">
-                                <i class="bi bi-currency-dollar fs-5"></i>
-                            </div>
-                            <div>
-                                <p class="mb-0 small"><strong>${userName}</strong> vừa đặt <span class="text-danger fw-bold">${amount.toLocaleString('vi-VN')} đ</span> trong phiên đấu giá.</p>
-                                <small class="text-muted" style="font-size: 0.75rem;">Vừa xong</small>
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Nhét thông báo mới lên trên cùng của danh sách
-                    if(notiList) notiList.prepend(newNoti);
+                if (isDark) {
+                    // Đang Tối -> Bật Sáng
+                    htmlElement.setAttribute('data-bs-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    icon.classList.replace('bi-sun', 'bi-moon');
+                } else {
+                    // Đang Sáng -> Tắt đèn (Tối)
+                    htmlElement.setAttribute('data-bs-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    icon.classList.replace('bi-moon', 'bi-sun');
                 }
             });
-
-            globalConnection.start().catch(err => console.error(err));
-            
-            // 3. Tắt chấm đỏ khi anh bấm vào xem chuông
-            if(bellIcon) {
-                bellIcon.addEventListener('click', function() {
-                    if(bellBadge) bellBadge.classList.add('d-none');
-                });
-            }
-
-            const themeCheck = document.getElementById('themeCheck');
-            const applyBtn = document.getElementById('applyThemeBtn');
-            const htmlElement = document.documentElement;
-
-        // 1. Khởi tạo trạng thái ban đầu
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            htmlElement.setAttribute('data-bs-theme', savedTheme);
-            themeCheck.checked = (savedTheme === 'dark');
-
-            // 2. Khi nhấn nút Áp dụng
-            applyBtn.addEventListener('click', function () {
-                const newTheme = themeCheck.checked ? 'dark' : 'light';
-                htmlElement.setAttribute('data-bs-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-
-                // Thêm một chút hiệu ứng cho chuyên nghiệp
-                applyBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu...';
-                setTimeout(() => {
-                    applyBtn.innerHTML = 'Áp dụng';
-                    alert('Đã đổi giao diện thành công rồi anh xã nhé!');
-                }, 500);
-
-                // 1. HỆ THỐNG GHI NHỚ GIAO DIỆN (DARK/LIGHT) TOÀN TRANG
-            const htmlElement = document.documentElement;
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            htmlElement.setAttribute('data-bs-theme', savedTheme);
-
-            // (Nếu anh ở trang MyAccount thì tự gạt cái nút cho khớp)
-            const themeCheck = document.getElementById('themePageCheck');
-            if (themeCheck) {
-                themeCheck.checked = (savedTheme === 'dark');
-            }
-
-            // 2. HỆ THỐNG ĐỒNG HỒ ĐẾM NGƯỢC CHO TẤT CẢ SẢN PHẨM Ở MỌI TRANG
-            const timers = document.querySelectorAll('.countdown-timer');
-            if (timers.length > 0) {
-                setInterval(function () {
-                    const now = new Date().getTime();
-
-                    timers.forEach(timer => {
-                        // Lấy thời gian kết thúc mà mình đã giấu trong thẻ HTML
-                        const endTimeStr = timer.getAttribute('data-endtime');
-                        if (!endTimeStr) return;
-
-                        const endTime = new Date(endTimeStr).getTime();
-                        const distance = endTime - now;
-
-                        if (distance <= 0) {
-                            timer.innerHTML = '<i class="bi bi-x-circle me-1"></i>Đã kết thúc';
-                            timer.classList.replace('bg-danger', 'bg-secondary');
-                        } else {
-                            // Tính toán giờ, phút, giây
-                            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                            timer.innerHTML = `<i class="bi bi-clock-history me-1"></i>${hours}h ${minutes}p ${seconds}s`;
-                        }
-                    });
-                }, 1000);
-    });
+        });
     </script>
 </body>
 

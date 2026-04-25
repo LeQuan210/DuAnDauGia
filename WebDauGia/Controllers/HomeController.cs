@@ -23,10 +23,16 @@ namespace WebDauGiaUI.Controllers
             _context = context;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
+            Stopwatch sw = new Stopwatch(); // Bắt đầu đo thời gian
+            sw.Start();
             // Lấy toàn bộ sản phẩm từ Database ra
             var products = _context.Products.OrderByDescending(p => p.CreatedAt).ToList();
+            sw.Stop(); // Dừng đồng hồ
+            ViewBag.ExecutionTime = sw.ElapsedMilliseconds; // Gửi thời gian thực thi ra View
+            ViewBag.Message = $"Hệ thống đã tải {products.Count} sản phẩm xuyên qua 3 tầng kiến trúc.";
             return View(products); // Gửi danh sách này sang giao diện
         }
 

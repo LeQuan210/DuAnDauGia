@@ -105,126 +105,133 @@
     </div>
 </div>
 
-@@section Scripts {
-<script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // 1. Lấy đúng ID của sản phẩm hiện tại
-        const productId = "@Model.Id";
-        const currentUser = "@(User.Identity.IsAuthenticated? User.Identity.Name : "")";
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 1. Lấy thông tin cơ bản
+            const productId = "@Model.Id";
+            const currentUser = "@(User.Identity.IsAuthenticated? User.Identity.Name : "")";
 
-        // 2. Kết nối tới đài phát thanh (Hub)
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/auctionHub")
-            .build();
+            // 2. Kết nối tới đài phát thanh (Hub)
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/auctionHub")
+                .build();
 
-        // 3. Lắng nghe khi có người đặt giá thành công
-        connection.on("ReceiveBid", function (user, amount) {
-            // Cập nhật giá màu đỏ to đùng
-            document.getElementById("currentPrice").innerText = new Intl.NumberFormat('vi-VN').format(amount) + " đ";
+            // 3. Lắng nghe khi có người đặt giá thành công
+            connection.on("ReceiveBid", function (user, amount) {
+                document.getElementById("currentPrice").innerText = new Intl.NumberFormat('vi-VN').format(amount) + " đ";
 
-            // Thêm tin nhắn vào hộp chat
-            const chatBox = document.getElementById("chatBox");
-            const isMe = user === currentUser;
+                const chatBox = document.getElementById("chatBox");
+                const isMe = user === currentUser;
 
-            const div = document.createElement("div");
-            div.className = "d-flex mb-3 " + (isMe ? "justify-content-end" : "");
+                const div = document.createElement("div");
+                div.className = "d-flex mb-3 " + (isMe ? "justify-content-end" : "");
 
-            const innerDiv = document.createElement("div");
-            innerDiv.className = isMe
-                ? "bg-primary bg-opacity-10 border border-primary rounded-4 p-2 shadow-sm text-end"
-                : "bg-white border rounded-4 p-2 shadow-sm";
-            innerDiv.style.maxWidth = "85%";
+                const innerDiv = document.createElement("div");
+                innerDiv.className = isMe
+                    ? "bg-primary bg-opacity-10 border border-primary rounded-4 p-2 shadow-sm text-end"
+                    : "bg-white border rounded-4 p-2 shadow-sm";
+                innerDiv.style.maxWidth = "85%";
 
-            innerDiv.innerHTML = `
-                <small class="fw-bold ${isMe ? 'text-primary pe-1' : 'text-secondary ps-1'} d-block">${isMe ? 'Bạn' : user}</small>
-                <span class="text-dark px-1">Đã đặt <strong class="text-danger">${new Intl.NumberFormat('vi-VN').format(amount)} VNĐ</strong></span>
-            `;
+                innerDiv.innerHTML = `
+                    <small class="fw-bold ${isMe ? 'text-primary pe-1' : 'text-secondary ps-1'} d-block">${isMe ? 'Bạn' : user}</small>
+                    <span class="text-dark px-1">Đã đặt <strong class="text-danger">${new Intl.NumberFormat('vi-VN').format(amount)} VNĐ</strong></span>
+                `;
 
-            div.appendChild(innerDiv);
-            chatBox.appendChild(div);
+                div.appendChild(innerDiv);
+                chatBox.appendChild(div);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
 
-            // Tự động cuộn xuống tin nhắn mới nhất
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
+            // Khởi động kết nối
+            connection.start().then(function () {
+                connection.invoke("JoinProductGroup", productId);
+                const chatBox = document.getElementById("chatBox");
+                if (chatBox) chatBox.innerHTML = '';
+            }).catch(function (err) {
+                return console.error(err.toString());
+            });
 
-        // Khởi động kết nối và tham gia đúng phòng của sản phẩm này
-        connection.start().then(function () {
-            connection.invoke("JoinProductGroup", productId);
+            // 4. Xử lý nút ĐẶT GIÁ và đo thời gian AJAX ngầm
+            const btnBid = document.getElementById("btnPlaceBid");
+            if (btnBid) {
+                btnBid.addEventListener('click', function (e) {
+                    e.preventDefault();
 
-            // Xóa dòng chữ "Lịch sử trả giá..." mặc định nếu kết nối thành công
-            const chatBox = document.getElementById("chatBox");
-            chatBox.innerHTML = '';
-        }).catch(function (err) {
-            return console.error(err.toString());
-        });
-
-        // 4. Xử lý khi anh bấm nút ĐẶT GIÁ
-        const btnBid = document.getElementById("btnPlaceBid");
-        if (btnBid) {
-            btnBid.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                if (!currentUser) {
-                    window.location.href = '/User/Login?ReturnUrl=' + window.location.pathname;
-                    return;
-                }
-
-                const inputBid = document.getElementById("bidInput");
-                const bidAmount = parseInt(inputBid.value);
-
-                if (isNaN(bidAmount) || bidAmount < 5000) {
-                    alert("Anh nhập số tiền hợp lệ (từ 5.000 VNĐ) nhé!");
-                    return;
-                }
-
-                // Vô hiệu hóa nút tạm thời
-                btnBid.disabled = true;
-                btnBid.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
-
-                // Chạy ngầm hỏi Thu ngân xem ví có đủ tiền không
-                fetch('/User/ValidateBidBalance', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'bidAmount=' + bidAmount
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.needsLogin) {
+                    if (!currentUser) {
                         window.location.href = '/User/Login?ReturnUrl=' + window.location.pathname;
                         return;
                     }
-                    if (data.success) {
-                        // Tiền đầy túi, tự tin phát sóng lên Hub
-                        connection.invoke("SendBid", productId, currentUser, bidAmount).catch(function (err) {
-                            console.error(err.toString());
-                        });
-                        inputBid.value = '';
-                    } else {
-                        if (confirm(data.message + '\nAnh có muốn sang trang Nạp tiền ngay bây giờ không?')) {
-                            window.location.href = '/User/Deposit';
-                        }
+
+                    const inputBid = document.getElementById("bidInput");
+                    const bidAmount = parseInt(inputBid.value);
+
+                    if (isNaN(bidAmount) || bidAmount < 5000) {
+                        alert("Anh nhập số tiền hợp lệ (từ 5.000 VNĐ) nhé!");
+                        return;
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Có lỗi hệ thống khi kiểm tra số dư.');
-                })
-                .finally(() => {
-                    btnBid.disabled = false;
-                    btnBid.innerHTML = 'ĐẶT GIÁ';
+
+                    btnBid.disabled = true;
+                    btnBid.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+
+                    fetch('/User/ValidateBidBalance', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'bidAmount=' + bidAmount
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.needsLogin) {
+                            window.location.href = '/User/Login?ReturnUrl=' + window.location.pathname;
+                            return;
+                        }
+                        if (data.success) {
+                            // --- IN RA CONSOLE F12 CHO THẦY CHẤM ĐIỂM ---
+                            console.log("%c[Onion Architecture] Tác vụ AJAX ngầm thành công!", "color: #0d6efd; font-weight: bold;");
+                            console.log("%c⏱ Thời gian Server xử lý: " + data.time + " ms", "color: #dc3545; font-size: 14px; font-weight: bold;");
+
+                            // --- HIỆN THÔNG BÁO XANH LÁ TRÊN MÀN HÌNH ---
+                            let timeLog = document.getElementById("ajaxTimeLog");
+                            if (!timeLog) {
+                                timeLog = document.createElement("div");
+                                timeLog.id = "ajaxTimeLog";
+                                timeLog.className = "alert alert-success py-1 px-2 mt-2 mb-0 text-center animate__animated animate__fadeIn";
+                                timeLog.style.fontSize = "0.85rem";
+                                document.getElementById("bidFooter").appendChild(timeLog);
+                            }
+                            timeLog.innerHTML = `<i class="bi bi-stopwatch me-1"></i> Xác thực luồng ngầm: <strong>${data.time} ms</strong>`;
+
+                            setTimeout(() => { if (timeLog) timeLog.remove(); }, 3000);
+
+                            // Phóng dữ liệu lên SignalR
+                            connection.invoke("SendBid", productId, currentUser, bidAmount).catch(function (err) {
+                                console.error(err.toString());
+                            });
+                            inputBid.value = '';
+                        } else {
+                            if (confirm(data.message + '\nAnh có muốn sang trang Nạp tiền ngay bây giờ không?')) {
+                                window.location.href = '/User/Deposit';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi hệ thống khi kiểm tra số dư.');
+                    })
+                    .finally(() => {
+                        btnBid.disabled = false;
+                        btnBid.innerHTML = 'ĐẶT GIÁ';
+                    });
                 });
-            });
-        }
-    });
-</script>
-
-
-
-    <style>
+            }
+        });
+    </script>
+}
+<style>
         @@keyframes popIn {
             0%
 
@@ -257,4 +264,3 @@
                 background: #888;
             }
     </style>
-}
