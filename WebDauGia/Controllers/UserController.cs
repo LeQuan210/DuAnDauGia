@@ -13,6 +13,8 @@ using MimeKit;
 using System.Net.Http;
 using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace WebDauGiaUI.Controllers
 {
@@ -148,7 +150,8 @@ namespace WebDauGiaUI.Controllers
             }
 
             // KIỂM TRA THÊM MẬT KHẨU
-            if (user != null && user.PasswordHash == password)
+            string encryptedPassword = HashPassword(password); // Mã hóa mật khẩu nhập vào để so sánh với CSDL
+            if (user != null && user.PasswordHash == encryptedPassword)
             {
                 var claims = new List<Claim>
         {
@@ -204,6 +207,7 @@ namespace WebDauGiaUI.Controllers
                 user.Role = "Bidder";
                 user.TrustScore = 100;
                 user.WalletBalance = 0;
+                user.PasswordHash = HashPassword(user.PasswordHash); // Mã hóa mật khẩu trước khi lưu
 
                 await _userRepository.AddUserAsync(user);
 
@@ -323,7 +327,7 @@ namespace WebDauGiaUI.Controllers
             var user = _context.Users.FirstOrDefault(u => u.Email == email);
             if (user != null)
             {
-                user.PasswordHash = newPassword; // Gán mật khẩu mới
+                user.PasswordHash = HashPassword(newPassword); // Gán mật khẩu mới
                 _context.Users.Update(user); // Cập nhật
                 await _context.SaveChangesAsync(); // Lưu xuống DB
 
@@ -536,5 +540,17 @@ namespace WebDauGiaUI.Controllers
 
             return View(users);
         }
+
+        // Hàm mã hóa mật khẩu chuẩn SHA-256
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+            }
+        }
     }
+
+
 }
