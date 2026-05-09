@@ -21,6 +21,7 @@
                 </div>
 
                 <form asp-action="Deposit" method="post">
+                    @Html.AntiForgeryToken()
                     @if (TempData["Success"] != null)
                     {
                         <div class="alert alert-success py-2 small fw-bold text-center">@TempData["Success"]</div>

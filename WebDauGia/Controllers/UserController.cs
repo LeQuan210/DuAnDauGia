@@ -49,6 +49,8 @@ namespace WebDauGiaUI.Controllers
 
 
         [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateAuction(string ProductName, int CategoryId, decimal StartPrice, string Description, IFormFile ImageFile)
         {
             string imagePath = "/images/no-image.png"; // Ảnh mặc định nếu anh không tải ảnh
@@ -417,6 +419,8 @@ namespace WebDauGiaUI.Controllers
 
         // 2. Xử lý cộng tiền vào Database khi bấm Nạp
         [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Deposit(decimal amount)
         {
             var userIdString = User.FindFirst("UserId")?.Value;

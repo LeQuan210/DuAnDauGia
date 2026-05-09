@@ -9,6 +9,7 @@
     </div>
 
     <form asp-controller="User" asp-action="CreateAuction" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
         <div class="row g-5">
             <div class="col-md-5">
                 <input type="file" name="ImageFile" class="form-control w-75" accept="image/*" required>

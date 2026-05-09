@@ -258,7 +258,40 @@
                 }
             });
         });
+        document.addEventListener('DOMContentLoaded', function () {
+            // 1. Khóa luôn chuột phải (chống bấm Inspect/Kiểm tra phần tử)
+            document.addEventListener('contextmenu', function (e) {
+                e.preventDefault();
+                alert("⛔ CẢNH BÁO BẢO MẬT: Hệ thống đã khóa tính năng chuột phải để chống sao chép và can thiệp giao diện!");
+            });
+
+            // 2. Khóa các phím tắt nguy hiểm (F12, Ctrl+Shift+I, Ctrl+U...)
+            document.addEventListener('keydown', function (e) {
+                // Chặn phím F12
+                if (e.key === 'F12' || e.keyCode === 123) {
+                    e.preventDefault();
+                    alert("⛔ CẢNH BÁO BẢO MẬT: Hành vi mở Developer Tools (F12) đã bị hệ thống chặn!");
+                    return false;
+                }
+
+                // Chặn Ctrl + Shift + I (Mở Inspect) hoặc Ctrl + Shift + J (Mở Console)
+                if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) {
+                    e.preventDefault();
+                    alert("⛔ CẢNH BÁO BẢO MẬT: Không được phép sử dụng công cụ kiểm tra phần tử!");
+                    return false;
+                }
+
+                // Chặn Ctrl + U (Xem Source Code HTML)
+                if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
+                    e.preventDefault();
+                    alert("⛔ CẢNH BÁO BẢO MẬT: Hành vi xem mã nguồn (View Source) đã bị vô hiệu hóa!");
+                    return false;
+                }
+            });
+        });
+
     </script>
+  
 </body>
 
 </html>
