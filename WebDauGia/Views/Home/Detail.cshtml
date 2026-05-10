@@ -56,15 +56,14 @@
                     </span>
                 </div>
 
-                @if (ViewBag.IsSeller != null && ViewBag.IsSeller == true)
-                {
+                @if (User.Identity.IsAuthenticated){
                     <div class="bg-warning bg-opacity-10 border-bottom border-warning p-3 shadow-sm">
                         <p class="fw-bold text-warning mb-2 text-uppercase" style="font-size: 0.85rem;"><i class="bi bi-star-fill me-1"></i> Quyền quản lý phiên</p>
                         <div class="d-flex gap-2">
                             <button class="btn btn-outline-danger w-50 fw-bold" onclick="if(confirm('Anh có chắc chắn muốn hủy phiên đấu giá này không? Mọi lịch sử đặt giá sẽ bị xóa bỏ.')) { alert('Đã hủy phiên đấu giá thành công!'); window.location.href='/Home/Index'; }">
                                 <i class="bi bi-x-circle me-1"></i>Hủy đấu giá
                             </button>
-                            <button class="btn btn-success w-50 fw-bold shadow-sm" onclick="if(confirm('Anh muốn chốt ngay mức giá cao nhất hiện tại cho người này?')) { alert('Chốt phiên thành công!'); document.getElementById('winnerOverlay').classList.remove('d-none'); document.getElementById('winnerOverlay').classList.add('d-flex'); }">
+                            <button class="btn btn-success w-50 fw-bold shadow-sm" onclick="window.ketThucPhien(true)">
                                 <i class="bi bi-hammer me-1"></i>Chốt ngay
                             </button>
                         </div>
@@ -95,139 +94,128 @@
         <h2 class="fw-bold text-dark mb-4">Phiên đấu giá đã kết thúc!</h2>
         <div class="bg-light rounded-3 p-3 mb-4 border">
             <p class="fs-6 text-muted mb-1">Người thắng cuộc</p>
-            <p class="fs-4 fw-bold text-primary mb-3">@User.Identity.Name</p>
+            <p class="fs-4 fw-bold text-primary mb-3" id="winnerNameDisplay">Đang xác định...</p>
             <hr class="w-50 mx-auto my-2">
             <p class="fs-6 text-muted mb-1 mt-3">Mức giá chốt</p>
-            <p class="text-danger fw-bold fs-3 mb-0" id="finalPriceDisplay"></p>
+            <p class="text-danger fw-bold fs-3 mb-0" id="finalPriceDisplay">0 đ</p>
         </div>
 
-        <a asp-controller="Home" asp-action="Index" class="btn btn-primary w-100 fw-bold py-3 fs-5 rounded-pill">Đóng & Về trang chủ</a>
+        <a href="#" id="btnCheckout" class="btn btn-primary w-100 fw-bold py-3 fs-5 rounded-pill shadow-sm">
+            <i class="bi bi-credit-card me-2"></i>Thanh toán ngay
+        </a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-light w-100 fw-bold py-2 mt-2 rounded-pill">Về trang chủ</a>
     </div>
 </div>
-
 @section Scripts {
-    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
     <script>
+        // --- KHAI BÁO BIẾN TOÀN CỤC (Để ở ngoài cùng cho chắc) ---
+        let lastBidder = "Chưa có người đặt";
+        let lastPrice = parseInt("@Model.StartPrice");
+        let botIntervalId = null;
+        let countdownIntervalId = null;
+
         document.addEventListener('DOMContentLoaded', function () {
-            // 1. Lấy thông tin cơ bản
             const productId = "@Model.Id";
             const currentUser = "@(User.Identity.IsAuthenticated? User.Identity.Name : "")";
+            const startPrice = parseInt("@Model.StartPrice");
 
-            // 2. Kết nối tới đài phát thanh (Hub)
-            const connection = new signalR.HubConnectionBuilder()
-                .withUrl("/auctionHub")
-                .build();
+            // --- HÀM CHỐT PHIÊN (XỬ LÝ TRIỆT ĐỂ LỖI 0 Đ) ---
+            window.ketThucPhien = function(isManual) {
+                if (isManual && !confirm('Anh có chắc muốn chốt ngay mức giá này không?')) return;
 
-            // 3. Lắng nghe khi có người đặt giá thành công
-            connection.on("ReceiveBid", function (user, amount) {
-                document.getElementById("currentPrice").innerText = new Intl.NumberFormat('vi-VN').format(amount) + " đ";
+                // 1. Dừng ngay lập tức Bot và Đồng hồ
+                if (botIntervalId) clearInterval(botIntervalId);
+                if (countdownIntervalId) clearInterval(countdownIntervalId);
 
-                const chatBox = document.getElementById("chatBox");
-                const isMe = user === currentUser;
+                // 2. Khóa nút đặt giá
+                const btnBid = document.getElementById("btnPlaceBid");
+                if (btnBid) btnBid.disabled = true;
 
-                const div = document.createElement("div");
-                div.className = "d-flex mb-3 " + (isMe ? "justify-content-end" : "");
+                // 3. ÉP DỮ LIỆU VÀO POPUP (Dùng biến lastBidder và lastPrice vừa cập nhật)
+                document.getElementById('winnerNameDisplay').innerText = lastBidder;
+                document.getElementById('finalPriceDisplay').innerText = new Intl.NumberFormat('vi-VN').format(lastPrice) + " đ";
 
-                const innerDiv = document.createElement("div");
-                innerDiv.className = isMe
-                    ? "bg-primary bg-opacity-10 border border-primary rounded-4 p-2 shadow-sm text-end"
-                    : "bg-white border rounded-4 p-2 shadow-sm";
-                innerDiv.style.maxWidth = "85%";
+                // 4. GÁN LINK THANH TOÁN (Ép link trực tiếp)
+                const payLink = `/User/Checkout?productId=${productId}&amount=${lastPrice}`;
+                document.getElementById('btnCheckout').setAttribute('href', payLink);
 
-                innerDiv.innerHTML = `
-                    <small class="fw-bold ${isMe ? 'text-primary pe-1' : 'text-secondary ps-1'} d-block">${isMe ? 'Bạn' : user}</small>
-                    <span class="text-dark px-1">Đã đặt <strong class="text-danger">${new Intl.NumberFormat('vi-VN').format(amount)} VNĐ</strong></span>
-                `;
+                // 5. HIỆN POPUP
+                document.getElementById('winnerOverlay').classList.remove('d-none');
+                document.getElementById('winnerOverlay').classList.add('d-flex');
+            };
 
-                div.appendChild(innerDiv);
-                chatBox.appendChild(div);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            });
-
-            // Khởi động kết nối
-            connection.start().then(function () {
-                connection.invoke("JoinProductGroup", productId);
-                const chatBox = document.getElementById("chatBox");
-                if (chatBox) chatBox.innerHTML = '';
-            }).catch(function (err) {
-                return console.error(err.toString());
-            });
-
-            // 4. Xử lý nút ĐẶT GIÁ và đo thời gian AJAX ngầm
-            const btnBid = document.getElementById("btnPlaceBid");
-            if (btnBid) {
-                btnBid.addEventListener('click', function (e) {
-                    e.preventDefault();
-
-                    if (!currentUser) {
-                        window.location.href = '/User/Login?ReturnUrl=' + window.location.pathname;
+            // --- ĐỒNG HỒ ĐẾM NGƯỢC ---
+            const timerElement = document.querySelector('.countdown-timer');
+            if (timerElement) {
+                const endTime = new Date(timerElement.getAttribute('data-endtime')).getTime();
+                countdownIntervalId = setInterval(function () {
+                    const distance = endTime - new Date().getTime();
+                    if (distance < 0) {
+                        clearInterval(countdownIntervalId);
+                        timerElement.innerHTML = "Đã kết thúc";
+                        window.ketThucPhien(false); // Hết giờ tự chốt
                         return;
                     }
-
-                    const inputBid = document.getElementById("bidInput");
-                    const bidAmount = parseInt(inputBid.value);
-
-                    if (isNaN(bidAmount) || bidAmount < 5000) {
-                        alert("Anh nhập số tiền hợp lệ (từ 5.000 VNĐ) nhé!");
-                        return;
-                    }
-
-                    btnBid.disabled = true;
-                    btnBid.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
-
-                    fetch('/User/ValidateBidBalance', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: 'bidAmount=' + bidAmount
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.needsLogin) {
-                            window.location.href = '/User/Login?ReturnUrl=' + window.location.pathname;
-                            return;
-                        }
-                        if (data.success) {
-                            // --- IN RA CONSOLE F12 CHO THẦY CHẤM ĐIỂM ---
-                            console.log("%c[Onion Architecture] Tác vụ AJAX ngầm thành công!", "color: #0d6efd; font-weight: bold;");
-                            console.log("%c⏱ Thời gian Server xử lý: " + data.time + " ms", "color: #dc3545; font-size: 14px; font-weight: bold;");
-
-                            // --- HIỆN THÔNG BÁO XANH LÁ TRÊN MÀN HÌNH ---
-                            let timeLog = document.getElementById("ajaxTimeLog");
-                            if (!timeLog) {
-                                timeLog = document.createElement("div");
-                                timeLog.id = "ajaxTimeLog";
-                                timeLog.className = "alert alert-success py-1 px-2 mt-2 mb-0 text-center animate__animated animate__fadeIn";
-                                timeLog.style.fontSize = "0.85rem";
-                                document.getElementById("bidFooter").appendChild(timeLog);
-                            }
-                            timeLog.innerHTML = `<i class="bi bi-stopwatch me-1"></i> Xác thực luồng ngầm: <strong>${data.time} ms</strong>`;
-
-                            setTimeout(() => { if (timeLog) timeLog.remove(); }, 3000);
-
-                            // Phóng dữ liệu lên SignalR
-                            connection.invoke("SendBid", productId, currentUser, bidAmount).catch(function (err) {
-                                console.error(err.toString());
-                            });
-                            inputBid.value = '';
-                        } else {
-                            if (confirm(data.message + '\nAnh có muốn sang trang Nạp tiền ngay bây giờ không?')) {
-                                window.location.href = '/User/Deposit';
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Có lỗi hệ thống khi kiểm tra số dư.');
-                    })
-                    .finally(() => {
-                        btnBid.disabled = false;
-                        btnBid.innerHTML = 'ĐẶT GIÁ';
-                    });
-                });
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    timerElement.innerHTML = hours + "h " + minutes + "m " + seconds + "s";
+                }, 1000);
             }
+
+            // --- SIGNALR & BOT ---
+            try {
+                const connection = new signalR.HubConnectionBuilder().withUrl("/auctionHub").build();
+
+                connection.on("ReceiveBid", function (user, amount) {
+                    // CẬP NHẬT BIẾN TOÀN CỤC NGAY KHI CÓ GIÁ MỚI
+                    lastBidder = user;
+                    lastPrice = parseInt(amount);
+
+                    // Cập nhật giá trên màn hình chính
+                    document.getElementById("currentPrice").innerText = new Intl.NumberFormat('vi-VN').format(amount) + " đ";
+
+                    const chatBox = document.getElementById("chatBox");
+                    if (chatBox) {
+                        const isMe = user === currentUser;
+                        const div = document.createElement("div");
+                        div.className = "d-flex mb-3 " + (isMe ? "justify-content-end" : "justify-content-start");
+                        div.innerHTML = `<div class="p-2 rounded-4 shadow-sm ${isMe ? 'bg-primary text-white' : 'bg-white border'}" style="max-width: 80%">
+                            <small class="fw-bold d-block">${isMe ? 'Bạn' : user}</small>
+                            <span>Đã đặt: <strong>${new Intl.NumberFormat('vi-VN').format(amount)} đ</strong></span>
+                        </div>`;
+                        chatBox.appendChild(div);
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+                });
+
+                connection.start().then(function () {
+                    connection.invoke("JoinProductGroup", productId);
+
+                    // BOT TỰ ĐỘNG (Dừng lại ngay khi lastBidder thay đổi hoặc chốt phiên)
+                    botIntervalId = setInterval(() => {
+                        const botNames = ["[Bot] Đại gia giấu mặt", "[Bot] Dân chơi xóm"];
+                        const randomBot = botNames[Math.floor(Math.random() * botNames.length)];
+                        const newTotal = lastPrice + 10000; // Bot luôn cộng thêm 10k
+                        connection.invoke("SendBid", productId, randomBot, newTotal);
+                    }, 15000); // 15 giây bot nhảy 1 lần cho thong thả
+
+                }).catch(err => console.error(err));
+
+                // NÚT ĐẶT GIÁ CỦA ANH
+                document.getElementById("btnPlaceBid").addEventListener('click', function (e) {
+                    const bidStep = parseInt(document.getElementById("bidInput").value);
+                    if (isNaN(bidStep) || bidStep < 5000) return alert("Nhập tối thiểu 5.000đ");
+
+                    const totalAmount = lastPrice + bidStep;
+                    // Bắn giá lên Hub
+                    connection.invoke("SendBid", productId, currentUser, totalAmount);
+                    document.getElementById("bidInput").value = '';
+                });
+
+            } catch (e) { console.error(e); }
         });
     </script>
 }

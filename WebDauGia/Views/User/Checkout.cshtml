@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "Thanh toán đơn hàng";
+}
+
+<div class="container my-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0 rounded-4" style="max-width: 500px; width: 100%;">
+        <div class="card-header bg-primary text-white text-center py-3 rounded-top-4">
+            <h4 class="mb-0 fw-bold"><i class="bi bi-shield-check me-2"></i>Thanh toán an toàn</h4>
+        </div>
+        <div class="card-body p-4">
+            <div class="alert alert-info text-center rounded-3">
+                <p class="mb-1 text-muted">Số tiền cần thanh toán</p>
+                <h2 class="text-primary fw-bold mb-0">@ViewBag.Amount.ToString("N0") VNĐ</h2>
+            </div>
+
+            <form asp-action="ProcessCheckout" method="post">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Phương thức thanh toán</label>
+                    <div class="form-check border p-3 rounded-3 mb-2 shadow-sm bg-light">
+                        <input class="form-check-input ms-1" type="radio" name="paymentMethod" id="vnpay" checked>
+                        <label class="form-check-label ms-2 fw-bold text-dark" for="vnpay">
+                            Thanh toán qua Ví điện tử (VNPay/Momo)
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-danger w-100 fw-bold py-3 fs-5 rounded-pill shadow">
+                    XÁC NHẬN THANH TOÁN
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

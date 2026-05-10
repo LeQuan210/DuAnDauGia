@@ -1,16 +1,27 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 
-namespace WebDauGiaUI.Hubs
+namespace WebDauGiaUI.Hubs // Anh nhớ kiểm tra lại namespace cho khớp với project của anh
 {
-    // Kế thừa từ Hub của SignalR
     public class AuctionHub : Hub
     {
-        // Hàm này sẽ nhận tín hiệu gửi lên từ trình duyệt của người dùng
-        public async Task SendBid(string productId, string userName, int amount)
+        // Mở cửa cho user vào phòng đấu giá của sản phẩm này
+        public async Task JoinProductGroup(string productId)
         {
-            // Sau khi nhận, nó sẽ phát thanh ngay lập tức hàm "ReceiveBid" tới TẤT CẢ các máy tính đang kết nối
-            await Clients.All.SendAsync("ReceiveBid", productId, userName, amount);
+            await Groups.AddToGroupAsync(Context.ConnectionId, productId);
+        }
+
+        // Mời user ra khỏi phòng khi họ rời trang
+        public async Task LeaveProductGroup(string productId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, productId);
+        }
+
+        // Hàm phát loa thông báo giá (chắc anh đã có sẵn)
+        public async Task SendBid(string productId, string user, decimal amount)
+        {
+            // Chỉ phát thông báo đến những ai đang ở TRONG NHÓM của sản phẩm này
+            await Clients.Group(productId).SendAsync("ReceiveBid", user, amount);
         }
     }
 }

@@ -82,31 +82,82 @@
 </div>
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // ==========================================
+            // 1. XỬ LÝ ĐỒNG HỒ ĐẾM NGƯỢC NHIỀU SẢN PHẨM
+            // ==========================================
             const timers = document.querySelectorAll('.countdown-timer');
-            function updateTimers() {
-                const now = new Date().getTime();
-                timers.forEach(timer => {
-                    const endTimeAttr = timer.getAttribute('data-endtime');
-                    if (!endTimeAttr) return;
-                    const distance = new Date(endTimeAttr).getTime() - now;
+
+            timers.forEach(function(timerElement) {
+                const endTimeAttr = timerElement.getAttribute('data-endtime');
+                const endTime = new Date(endTimeAttr).getTime();
+
+                const interval = setInterval(function () {
+                    const now = new Date().getTime();
+                    const distance = endTime - now;
+
                     if (distance < 0) {
-                        timer.innerHTML = "<span class='text-danger'>Đã kết thúc</span>";
+                        clearInterval(interval);
+                        // Khi hết giờ thì đổi thành "Đã kết thúc" và đổi màu nền thành xám
+                        timerElement.innerHTML = "Đã kết thúc";
+                        timerElement.classList.replace('bg-danger', 'bg-secondary');
                         return;
                     }
+
                     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                     const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-                    let formattedTime = "";
-                    if (days > 0) formattedTime += days + " ngày ";
-                    formattedTime += String(hours).padStart(2, '0') + ":" + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-                    timer.innerText = formattedTime;
+                    let timeStr = "";
+                    if (days > 0) timeStr += days + "d ";
+                    timerElement.innerHTML = timeStr + hours + "h " + minutes + "m " + seconds + "s";
+                }, 1000);
+            });
+
+            // ==========================================
+            // 2. XỬ LÝ NÚT YÊU THÍCH (TRÁI TIM) BẰNG AJAX
+            // ==========================================
+            const favButtons = document.querySelectorAll('.btn-favorite');
+
+            favButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault(); // Chặn hành vi nhảy trang mặc định
+
+                    const productId = this.getAttribute('data-id');
+                    const icon = this.querySelector('i');
+
+                    // Gọi ngầm lên Controller để lưu vào DB
+                    fetch('/User/ToggleFavorite', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'productId=' + productId
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.needsLogin) {
+                            alert("Anh cần đăng nhập để lưu sản phẩm yêu thích nhé!");
+                            window.location.href = '/User/Login';
+                            return;
+                        }
+
+                        if (data.success) {
+                            // Đổi icon nếu thành công
+                            if (data.isFavorite) {
+                                icon.classList.remove('bi-heart', 'text-secondary');
+                                icon.classList.add('bi-heart-fill', 'text-danger'); // Tim đỏ
+                            } else {
+                                icon.classList.remove('bi-heart-fill', 'text-danger');
+                                icon.classList.add('bi-heart', 'text-secondary'); // Tim rỗng
+                            }
+                        }
+                    })
+                    .catch(err => console.error("Lỗi:", err));
                 });
-            }
-            updateTimers();
-            setInterval(updateTimers, 1000);
+            });
         });
     </script>
 }

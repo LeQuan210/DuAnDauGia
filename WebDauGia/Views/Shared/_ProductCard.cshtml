@@ -3,10 +3,11 @@
 <div class="col">
     <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden position-relative product-card" data-product-id="@Model.Id" data-end-time="@Model.AuctionEndTime.ToString("yyyy-MM-ddTHH:mm:ss")">
         <a asp-controller="Home" asp-action="Detail" asp-route-id="@Model.Id" class="d-block position-relative">
-            <img src="@Model.ImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;">
-            <div class="position-absolute top-0 end-0 m-2 badge bg-danger countdown-timer"
+            <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/picture/default-product.jpg" : Model.ImageUrl)" class="card-img-top" style="height: 200px; object-fit: cover;">
+            
+            <div class="badge bg-danger position-absolute top-0 end-0 m-2 countdown-timer"
                  data-endtime="@Model.AuctionEndTime.ToString("yyyy-MM-ddTHH:mm:ss")">
-                Đang tải...
+                Đang tính...
             </div>
         </a>
 
@@ -18,7 +19,10 @@
                 <a asp-controller="Home" asp-action="Detail" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm rounded-pill px-3">
                     Tham gia đấu giá
                 </a>
-                <i class="bi bi-heart fs-5 text-secondary favorite-btn" style="cursor: pointer;" title="Thêm vào yêu thích"></i>
+                
+                <a href="#" class="btn-favorite" data-id="@Model.Id">
+                    <i class="bi bi-heart text-secondary"></i>
+                </a>
             </div>
         </div>
     </div>

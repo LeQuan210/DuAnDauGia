@@ -55,8 +55,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-app.UseAuthentication(); // Thêm middleware xác thực trước Authorization
 app.UseSession();
+app.UseAuthentication(); // Thêm middleware xác thực trước Authorization
 app.UseAuthorization();
 
 app.MapControllerRoute(

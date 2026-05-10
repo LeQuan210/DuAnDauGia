@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebDauGiaUI.Controllers
 {
@@ -117,7 +118,8 @@ namespace WebDauGiaUI.Controllers
             return View();
         }
 
-        // Xử lý khi bấm nút Đăng nhập
+        // Xử lý khi bấm nút Đăng
+        [ValidateAntiForgeryToken]
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password) // THÊM PASSWORD VÀO ĐÂY
         {
@@ -144,6 +146,11 @@ namespace WebDauGiaUI.Controllers
 
             // Tìm user trong Database
             var user = await _userRepository.GetUserByUsernameAsync(username);
+            if (user == null)
+            {
+                TempData["Error"] = "Tài khoản hoặc mật khẩu không chính xác!";
+                return View();
+            }
 
             if (user.IsLocked)
             {
@@ -245,7 +252,7 @@ namespace WebDauGiaUI.Controllers
                 client.Connect("smtp.gmail.com", 587, false);
 
                 // Anh thay Email và cái Mật khẩu ứng dụng 16 ký tự (ở Bước 1) vào đây:
-                client.Authenticate("lequan0971662799@gmail.com", "pgcm njbt chvt wnhf");
+                client.Authenticate("lequan0971662799@gmail.com", "ivcw prou keiw hnzs");
 
                 client.Send(message);
                 client.Disconnect(true);
@@ -345,65 +352,74 @@ namespace WebDauGiaUI.Controllers
             TempData["Error"] = "Không tìm thấy tài khoản của anh trong hệ thống.";
             return View();
         }
+        
         [Authorize] // Chỉ cho phép người đã đăng nhập mới được yêu thích sản phẩm
-        [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> ToggleFavorite(int productId)
         {
-            // 1. Kiểm tra xem người dùng đã đăng nhập chưa
-            var userIdString = User.FindFirst("UserId")?.Value;
-            if (userIdString == null) return Json(new { success = false, message = "Vui lòng đăng nhập anh nhé." });
+            // 1. Kiểm tra xem người dùng đã đăng nhập chưa
+            var userIdString = User.FindFirst("UserId")?.Value;
+            // (Lưu ý: Nếu anh dùng cơ chế mặc định của .NET thì có thể đổi thành User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;)
+
+            if (string.IsNullOrEmpty(userIdString))
+                return Json(new { needsLogin = true, success = false, message = "Vui lòng đăng nhập anh nhé." });
+
             var userId = int.Parse(userIdString);
 
-            // 2. Kiểm tra sản phẩm có tồn tại không
-            var product = _context.Products.Find(productId);
-            if (product == null) return Json(new { success = false, message = "Sản phẩm không tồn tại." });
+            // 2. Kiểm tra sản phẩm có tồn tại không (Dùng FindAsync cho mượt)
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+                return Json(new { success = false, message = "Sản phẩm không tồn tại." });
 
-            // 3. Tra cứu xem đã yêu thích chưa
-            var favorite = _context.FavoriteProducts.FirstOrDefault(fp => fp.UserId == userId && fp.ProductId == productId);
+            // 3. Tra cứu xem đã yêu thích chưa (Dùng FirstOrDefaultAsync)
+            var favorite = await _context.FavoriteProducts.FirstOrDefaultAsync(fp => fp.UserId == userId && fp.ProductId == productId);
 
             if (favorite == null)
             {
-                // Chưa có thì thêm mới
-                var newFavorite = new FavoriteProduct { UserId = userId, ProductId = productId };
+                // Chưa có thì thêm mới
+                var newFavorite = new FavoriteProduct { UserId = userId, ProductId = productId };
                 _context.FavoriteProducts.Add(newFavorite);
                 await _context.SaveChangesAsync();
-                return Json(new { success = true, isFavorited = true, message = "Đã thêm vào yêu thích." });
+
+                // Đổi isFavorited thành isFavorite để khớp với file JS ở trang chủ
+                return Json(new { success = true, isFavorite = true, message = "Đã thêm vào yêu thích." });
             }
             else
             {
-                // Có rồi thì xóa đi (hủy yêu thích)
-                _context.FavoriteProducts.Remove(favorite);
+                // Có rồi thì xóa đi (hủy yêu thích)
+                _context.FavoriteProducts.Remove(favorite);
                 await _context.SaveChangesAsync();
-                return Json(new { success = true, isFavorited = false, message = "Đã xóa khỏi yêu thích." });
+
+                // Đổi isFavorited thành isFavorite để khớp với file JS
+                return Json(new { success = true, isFavorite = false, message = "Đã xóa khỏi yêu thích." });
             }
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> FavoriteProducts()
         {
-            // 1. Kiểm tra xem anh đã đăng nhập chưa
-            var userIdString = User.FindFirst("UserId")?.Value;
-            if (userIdString == null)
+            // 1. Kiểm tra xem anh đã đăng nhập chưa
+            var userIdString = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdString))
             {
-                return RedirectToAction("Login");
+                return RedirectToAction("Login", "User");
             }
             var userId = int.Parse(userIdString);
 
-            // 2. Tìm danh sách ID những sản phẩm anh đã thích
-            var favoriteIds = _context.FavoriteProducts
-        .Where(fp => fp.UserId == userId)
-        .Select(fp => fp.ProductId)
-        .ToList();
+            // 2. Lấy ID và thông tin sản phẩm (Chuyển sang dùng Async để tối ưu hiệu năng)
+            var favoriteIds = await _context.FavoriteProducts
+                .Where(fp => fp.UserId == userId)
+                .Select(fp => fp.ProductId)
+                .ToListAsync();
 
-            // 3. Lấy thông tin chi tiết của những sản phẩm đó
-            var favoriteProducts = _context.Products
-        .Where(p => favoriteIds.Contains(p.Id))
-        .ToList();
+            var favoriteProducts = await _context.Products
+                .Where(p => favoriteIds.Contains(p.Id))
+                .ToListAsync();
 
-            // 4. Trả về View cùng với danh sách sản phẩm
-            return View(favoriteProducts);
+            // 4. Trả về View cùng với danh sách sản phẩm
+            return View(favoriteProducts);
         }
-
         // 1. Giao diện trang Nạp Tiền
         [Authorize] // Chỉ cho phép người đã đăng nhập mới được nạp tiền
         [HttpGet]
@@ -553,6 +569,26 @@ namespace WebDauGiaUI.Controllers
                 var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
                 return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
             }
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult Checkout(string productId, decimal amount)
+        {
+            // Đẩy dữ liệu qua View để hiển thị hóa đơn
+            ViewBag.ProductId = productId;
+            ViewBag.Amount = amount;
+            return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ProcessCheckout()
+        {
+            // Giả lập xử lý thanh toán (thực tế sẽ gọi API VNPay/Momo)
+            TempData["Message"] = "Thanh toán thành công! Hệ thống đang chuẩn bị giao hàng cho anh.";
+            return RedirectToAction("Index", "Home");
         }
     }
 

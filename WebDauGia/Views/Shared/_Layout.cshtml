@@ -33,7 +33,7 @@
                 </div>
 
                 <div class="d-flex align-items-center ms-auto">
-                    @if (User.Identity.IsAuthenticated && Context.Session.GetString("Username") != null)
+                    @if (User.Identity.IsAuthenticated)
                     {
                     <div class="dropdown me-3 d-flex align-items-center">
                                                 <a href="#" class="nav-link text-dark position-relative p-0" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -76,7 +76,12 @@
                                 <li><a class="dropdown-item py-2 fw-bold text-primary" asp-controller="User" asp-action="MyAccount"><i class="bi bi-gear me-1"></i> Thiết lập tài khoản</a></li>
 
                                 <li><a class="dropdown-item py-2 fw-bold text-success" asp-controller="User" asp-action="CreateAuction"><i class="bi bi-plus-circle me-2"></i> Tạo phiên đấu giá</a></li>
-
+                                <li class="nav-item">
+                                    <a class="nav-link fw-bold text-success" asp-controller="User" asp-action="Deposit">
+                                        <i class="bi bi-wallet2 me-1"></i>Nạp tiền
+                                    </a>
+                                </li>
+                              
                                 @if (User.IsInRole("Admin"))
                                 {
                                     <li><hr class="dropdown-divider"></li>
@@ -289,7 +294,98 @@
                 }
             });
         });
+        // HÀM CHẠY ĐỒNG HỒ TOÀN WEB
+        function runGlobalCountdowns() {
+            const timers = document.querySelectorAll('.countdown-timer');
 
+            timers.forEach(function(timerElement) {
+                // Kiểm tra nếu đồng hồ này đã được chạy rồi thì bỏ qua (tránh chạy chồng chéo)
+                if (timerElement.getAttribute('data-started') === 'true') return;
+
+                const endTimeAttr = timerElement.getAttribute('data-endtime');
+                if (!endTimeAttr) return;
+
+                const endTime = new Date(endTimeAttr).getTime();
+
+                const interval = setInterval(function () {
+                    const now = new Date().getTime();
+                    const distance = endTime - now;
+
+                    if (distance < 0) {
+                        clearInterval(interval);
+                        timerElement.innerHTML = "Đã kết thúc";
+                        // Tự động đổi màu sang xám cho hài hòa
+                        timerElement.classList.remove('bg-danger');
+                        timerElement.classList.add('bg-secondary');
+                        return;
+                    }
+
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    let timeStr = "";
+                    if (days > 0) timeStr += days + "d ";
+                    timerElement.innerHTML = timeStr + hours + "h " + minutes + "m " + seconds + "s";
+                }, 1000);
+
+                // Đánh dấu đồng hồ này đã được kích hoạt
+                timerElement.setAttribute('data-started', 'true');
+            });
+        }
+
+        // Chạy ngay khi trang web tải xong
+        document.addEventListener('DOMContentLoaded', runGlobalCountdowns);
+
+
+        // --- HÀM XỬ LÝ TRÁI TIM TOÀN WEB ---
+        function initGlobalFavorites() {
+            // Sử dụng ủy quyền sự kiện lên thẻ body để bắt mọi cú click vào .btn-favorite
+            document.body.addEventListener('click', function (e) {
+                // Tìm xem cú click có nằm trong nút favorite không
+                const btn = e.target.closest('.btn-favorite');
+                if (!btn) return;
+
+                e.preventDefault();
+                const productId = btn.getAttribute('data-id');
+                const icon = btn.querySelector('i');
+
+                // Gọi API xử lý
+                fetch('/User/ToggleFavorite', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'productId=' + productId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.needsLogin) {
+                        alert("Anh đăng nhập để lưu sản phẩm yêu thích nhé!");
+                        window.location.href = '/User/Login';
+                        return;
+                    }
+                    if (data.success) {
+                        // Hiệu ứng đổi màu tim ngay lập tức
+                        if (data.isFavorite) {
+                            icon.classList.replace('bi-heart', 'bi-heart-fill');
+                            icon.classList.add('text-danger');
+                            icon.classList.remove('text-secondary');
+                        } else {
+                            icon.classList.replace('bi-heart-fill', 'bi-heart');
+                            icon.classList.remove('text-danger');
+                            icon.classList.add('text-secondary');
+                        }
+                    }
+                })
+                .catch(err => console.error("Lỗi Favorite:", err));
+            });
+        }
+
+        // Chạy kích hoạt khi trang tải xong
+        document.addEventListener('DOMContentLoaded', function() {
+            runGlobalCountdowns(); // Hàm đồng hồ nãy
+            initGlobalFavorites(); // Hàm trái tim mới
+        });
     </script>
   
 </body>

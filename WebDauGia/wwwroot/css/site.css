@@ -1,22 +1,63 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
+﻿/* 1. Đổi font chữ sang Inter (Sang trọng, hiện đại, dễ đọc hơn font hệ thống) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 body {
-  margin-bottom: 60px;
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa; /* Màu nền xám cực nhẹ để làm nổi bật thẻ trắng */
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* 2. Làm mềm các thẻ (Cards) và thêm hiệu ứng nổi (Hover) */
+.card {
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Bóng đổ cực êm */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .card:hover {
+        transform: translateY(-5px); /* Trượt nhẹ lên khi trỏ chuột */
+        /* Hiệu ứng bóng đổ tỏa sáng nhẹ nhàng, giống như ánh đèn trang trí rực rỡ lướt qua trong các lễ hội buổi tối */
+        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.15);
+    }
+
+/* 3. Bo tròn và làm nổi bật các nút bấm chính */
+.btn {
+    border-radius: 8px; /* Bo góc nhẹ nhàng */
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+}
+
+    .btn-primary:hover {
+        box-shadow: 0 6px 15px rgba(13, 110, 253, 0.5); /* Tăng độ sáng khi hover */
+        transform: translateY(-1px);
+    }
+
+/* 4. Tối ưu riêng cho chế độ Dark Mode (Nếu anh bấm nút đổi màu) */
+[data-bs-theme="dark"] body {
+    background-color: #121212;
+}
+
+[data-bs-theme="dark"] .card {
+    background-color: #1e1e1e;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+    [data-bs-theme="dark"] .card:hover {
+        /* Trong nền tối, ánh sáng xanh tỏa ra sẽ càng làm giao diện có chiều sâu hơn */
+        box-shadow: 0 8px 25px rgba(13, 110, 253, 0.25);
+    }
+
+/* 5. Khung nhập liệu (Input) mềm mại hơn */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 0.6rem 1rem;
+}
+
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }

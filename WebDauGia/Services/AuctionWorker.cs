@@ -54,8 +54,7 @@ namespace WebDauGiaUI.Services // Nhớ đổi tên namespace cho khớp với d
 
                 foreach (var auction in expiredAuctions)
                 {
-                    // 1. Khóa phiên đấu giá lại
-                    auction.IsClosed = true;
+                    
 
                     // 1. Khóa phiên đấu giá lại
                     auction.IsClosed = true;
