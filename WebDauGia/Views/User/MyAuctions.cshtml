@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IEnumerable<WebDauGiaDomain.Entities.Product>
+@{
     ViewData["Title"] = "Đấu giá của tôi";
 }
 
@@ -35,35 +36,51 @@
                             <th>Tên sản phẩm</th>
                             <th>Vai trò của bạn</th>
                             <th>Trạng thái</th>
-                            <th>Giá hiện tại / Chốt</th>
+                            <th>Giá hiện hành</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody class="text-center">
-                        <tr>
-                            <td class="fw-bold text-muted">AUC-001</td>
-                            <td class="text-start fw-bold">Mô hình Đặc biệt Uma Musume</td>
-                            <td><span class="badge bg-secondary">Người Mua</span></td>
-                            <td><span class="badge bg-success">Đang diễn ra</span></td>
-                            <td class="text-danger fw-bold">2.500.000 đ</td>
-                            <td><button class="btn btn-sm btn-outline-primary fw-bold">Vào xem</button></td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-muted">AUC-002</td>
-                            <td class="text-start fw-bold">Đồng hồ Thụy Sỹ Cổ</td>
-                            <td><span class="badge bg-dark">Người Bán</span></td>
-                            <td><span class="badge bg-warning text-dark">Sắp mở</span></td>
-                            <td class="text-muted">1.000.000 đ (Khởi điểm)</td>
-                            <td><button class="btn btn-sm btn-outline-secondary">Sửa thông tin</button></td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-muted">AUC-003</td>
-                            <td class="text-start fw-bold">Bóng chữ ký U23 Việt Nam</td>
-                            <td><span class="badge bg-secondary">Người Mua</span></td>
-                            <td><span class="badge bg-danger">Đã kết thúc</span></td>
-                            <td class="text-danger fw-bold">15.000.000 đ</td>
-                            <td><button class="btn btn-sm btn-success fw-bold">Thanh toán ngay</button></td>
-                        </tr>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-box-seam fs-1 d-block mb-2"></i>
+                                    Anh chưa tạo phiên đấu giá nào.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in Model)
+                            {
+                                // Xử lý logic hiển thị
+                                bool isEnded = item.AuctionEndTime <= DateTime.Now || item.IsClosed;
+                                decimal displayPrice = item.CurrentPrice > 0 ? item.CurrentPrice : item.StartPrice;
+
+                                <tr>
+                                    <td class="fw-bold text-muted">AUC-@item.Id.ToString("000")</td>
+                                    <td class="text-start fw-bold">@item.Name</td>
+                                    <td><span class="badge bg-dark">Người Bán</span></td>
+                                    <td>
+                                        @if (isEnded)
+                                        {
+                                            <span class="badge bg-danger">Đã kết thúc</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Đang diễn ra</span>
+                                        }
+                                    </td>
+                                    <td class="text-danger fw-bold">@displayPrice.ToString("N0") đ</td>
+                                    <td>
+                                        <a asp-controller="Home" asp-action="Detail" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary fw-bold">
+                                            Vào xem
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
                     </tbody>
                 </table>
             </div>

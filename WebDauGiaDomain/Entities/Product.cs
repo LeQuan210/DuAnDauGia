@@ -17,5 +17,7 @@ namespace WebDauGiaDomain.Entities
         public DateTime AuctionEndTime { get; set; }
         public bool IsClosed { get; set; } = false; // Cột này để đánh dấu phiên đấu giá đã đóng hay chưa
         public decimal CurrentPrice { get; set; } // Giá hiện tại của sản phẩm, sẽ được cập nhật sau mỗi lần đấu giá
+
+        public int SellerID { get; set; } // ID của người bán
     }
 }

@@ -54,6 +54,10 @@ namespace WebDauGiaUI.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateAuction(string ProductName, int CategoryId, decimal StartPrice, string Description, IFormFile ImageFile)
         {
+            var userIdString = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdString)) return RedirectToAction("Login");
+            var userId = int.Parse(userIdString);
+
             string imagePath = "/images/no-image.png"; // Ảnh mặc định nếu anh không tải ảnh
 
             if (ImageFile != null)
@@ -77,8 +81,9 @@ namespace WebDauGiaUI.Controllers
                 Description = Description,
                 ImageUrl = imagePath,
                 CreatedAt = DateTime.Now,
-                AuctionEndTime = DateTime.Now.AddHours(4) // Mặc định đấu giá kết thúc sau 4 giờ, anh có thể chỉnh lại sau
-            };
+                AuctionEndTime = DateTime.Now.AddHours(4), // Mặc định đấu giá kết thúc sau 4 giờ, anh có thể chỉnh lại sau
+                SellerID = userId
+            };
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync(); // Lệnh này là quan trọng nhất để dữ liệu xuất hiện trong SSMS
@@ -104,9 +109,22 @@ namespace WebDauGiaUI.Controllers
         }
 
         // Trang Quản lý Đấu giá của tôi
-        public IActionResult MyAuctions()
+        [Authorize]
+        public async Task<IActionResult> MyAuctions()
         {
-            return View();
+            // 1. Lấy ID của anh xã đang đăng nhập
+            var userIdString = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdString)) return RedirectToAction("Login");
+            var userId = int.Parse(userIdString);
+
+            // 2. Lọc danh sách: Chỉ lấy sản phẩm có SellerId trùng với ID của anh
+            var myProducts = await _context.Products
+                .Where(p => p.SellerID == userId)
+                .OrderByDescending(p => p.CreatedAt) // Cái nào mới đăng thì hiện lên đầu
+                .ToListAsync();
+
+            // 3. Trả về View kèm theo danh sách sản phẩm
+            return View(myProducts);
         }
         public IActionResult ForgotPassword()
         {
